@@ -22,8 +22,8 @@
                         <img src="${mic.photo}" alt="${mic.name}">
                         <div class="mic-details">
                             <h3>${mic.name}</h3>
-                            <p class="mic-number">Mic #: ${mic.micNumber}</p>
-                            <p>In-Ear Pack #: ${mic.inEarPack}</p>
+                            <p class="mic-number">Mic: ${mic.micNumber}</p>
+                            <p class="iem-pack">In-Ear Pack: ${mic.inEarPack}</p>
                             <p>Position: ${mic.position}</p>
                         </div>
                     `;
@@ -36,10 +36,15 @@
             location.reload(); // Reloads the entire page
         }
 
+        // Force refresh every 12 hours (12 * 60 * 60 * 1000 milliseconds)
+            setTimeout(() => {
+                location.reload();
+        }, 43200000);
+
         window.onload = loadMicAssignments;
 
         // Auto-refresh every 2 minutes
-        setInterval(loadMicAssignments, 120000);
+        setInterval(loadMicAssignments, 30000);
     </script>
     <style>
         body { 
@@ -63,6 +68,7 @@
             font-size: 2.8rem;
             padding: 0px;
             margin: 0px;
+            color: lightgray;
         }
         .mic-container {
             display: flex;
@@ -101,9 +107,19 @@
             padding: 5px 0;
         }
         .mic-number {
-            font-size: 1.4rem;
+            font-size: 1.7rem;
             font-weight: bolder;
-            margin: 1%;
+            margin-top: 2%;
+            text-decoration: underline;
+        }
+        .iem-pack {
+            font-size: 1.2rem;
+            font-weight: bolder;
+            margin-top: 2%;
+            /* text-decoration: underline; */
+        }
+        p {
+            margin-top:3%;
         }
 
         /* Refresh Button - Top Right */
