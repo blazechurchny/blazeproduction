@@ -60,15 +60,15 @@
             font-size: 2rem;
         }
         h3 {
-            font-size: 3rem;
+            font-size: 2.8rem;
             padding: 0px;
             margin: 0px;
         }
         .mic-container {
             display: flex;
-            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+            flex-wrap:unset; /* Allows wrapping on smaller screens */
             justify-content: center;
-            align-items: stretch;
+            align-items:safe;
             height: 100%;
             overflow-x: auto; /* Allows horizontal scrolling if needed */
             padding: 5px 10px;
@@ -76,7 +76,7 @@
         }
         .mic-card {
             flex: 1 1 auto; /* Makes each item flexible in width */
-            max-width: 270px; /* Maximum width for larger screens */
+            max-width: 250px; /* Maximum width for larger screens */
             min-width: 150px; /* Minimum width */
             border: 1px solid #ccc;
             border-radius: 10px;
