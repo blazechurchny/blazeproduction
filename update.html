@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update Mic Assignments</title>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, getDocs, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
+      authDomain: "micassignments.firebaseapp.com",
+      projectId: "micassignments",
+      storageBucket: "micassignments.appspot.com",
+      messagingSenderId: "1010248680745",
+      appId: "1:1010248680745:web:b82c69767cc857269c2338"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const assignmentsCollection = "micAssignments";
+    const imagesCollection = "images";
+
+    async function loadPage() {
+      const form = document.getElementById("micForm");
+      form.innerHTML = "";
+
+      const namesSnapshot = await getDocs(collection(db, imagesCollection));
+      const nameOptions = [];
+      const imageMap = {};
+
+      namesSnapshot.forEach(doc => {
+        const data = doc.data();
+        nameOptions.push(data.name);
+        imageMap[data.name] = data.photoURL;
+      });
+
+      const micSnapshot = await getDocs(collection(db, assignmentsCollection));
+
+      micSnapshot.forEach((docSnap, index) => {
+        const data = docSnap.data();
+        const docId = docSnap.id;
+
+        const section = document.createElement("div");
+        section.className = "mic-section";
+
+        section.innerHTML = `
+          <h3>Mic ${index + 1}</h3>
+          <div class="mic-box">
+            <label>Name:</label>
+            <select id="name-${docId}" class="name-dropdown">
+              ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? 'selected' : ''}>${name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="mic-box">
+            <label>Mic #:</label>
+            <input type="text" id="micNumber-${docId}" value="${data.micNumber || ''}">
+          </div>
+          <div class="mic-box">
+            <label>In-Ear Pack:</label>
+            <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ''}">
+          </div>
+          <div class="mic-box">
+            <label>Position:</label>
+            <input type="text" id="position-${docId}" value="${data.position || ''}">
+          </div>
+          <div class="mic-box">
+            <img id="photo-${docId}" src="${imageMap[data.name] || ''}" alt="Photo" style="max-width: 100%; border-radius: 8px;">
+          </div>
+        `;
+
+        form.appendChild(section);
+
+        document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
+          const newName = e.target.value;
+          document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
+        });
+      });
+    }
+
+    async function saveAssignments() {
+      const sections = document.querySelectorAll(".mic-section");
+
+      for (const section of sections) {
+        const id = section.querySelector("select").id.split("-")[1];
+
+        const name = document.getElementById(`name-${id}`).value;
+        const micNumber = document.getElementById(`micNumber-${id}`).value;
+        const inEarPack = document.getElementById(`inEarPack-${id}`).value;
+        const position = document.getElementById(`position-${id}`).value;
+
+        await setDoc(doc(db, assignmentsCollection, id), {
+          name,
+          micNumber,
+          inEarPack,
+          position
+        });
+      }
+
+      alert("✅ Mic assignments saved!");
+    }
+
+    window.addEventListener("DOMContentLoaded", loadPage);
+    window.saveAssignments = saveAssignments;
+  </script>
+
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    #micForm {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .mic-section {
+      background: #222;
+      padding: 15px;
+      border-radius: 8px;
+      width: 280px;
+      text-align: left;
+      border: 1px solid #444;
+    }
+    .mic-section h3 {
+      color: #28a745;
+      text-align: center;
+    }
+    .mic-box {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+    select, input {
+      width: 100%;
+      padding: 6px;
+      border-radius: 4px;
+      border: none;
+    }
+    button {
+      margin-top: 20px;
+      background: #28a745;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1e7e34;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Update Mic Assignments</h1>
+  <div id="micForm"></div>
+  <button onclick="saveAssignments()">Save Assignments</button>
+
+</body>
+</html>
