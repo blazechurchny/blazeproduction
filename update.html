@@ -209,19 +209,18 @@
     }
 
     .settings-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      justify-content: center;
-      align-items: flex-end;
-    }
+  display: block;
+  width: 100%;
+}
 
-    .field-group {
-      display: flex;
-      flex-direction: column;
-      flex: 1 1 200px;
-      min-width: 200px;
-    }
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
 
     .field-group label {
       font-weight: bold;
@@ -383,14 +382,62 @@
         margin: 0;
       }
     }
+
+    .open-btn {
+  background-color: #28a745;
+  color: white;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border-radius: 5px;
+  text-decoration: none;
+  position: absolute;
+  top: 20px;
+  z-index: 10;
+  transition: background 0.3s ease-in-out;
+}
+
+.open-btn:hover {
+  background-color: #1e7e34;
+}
+
+.left-btn {
+  left: 15px;
+}
+
+.right-btn {
+  right: 15px;
+}
+
+@media (max-width: 600px) {
+  .left-btn, .right-btn {
+    position: static;
+    display: block;
+    text-align: center;
+    margin: 5px auto;
+  }
+
+  .top-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #lastSaved {
+    margin-top: 8px;
+  }
+}
+
   </style>
 </head>
 <body>
 
   <div class="top-bar">
+    <a href="https://blazeproduction.org/mics" target="_blank" class="open-btn left-btn">Open Display Screen</a>
     <h1>Update Mic Assignments</h1>
+    <!-- <a href="https://blazeproduction.org/mics" target="_blank" class="open-btn right-btn">Open Display Screen</a> -->
     <span id="lastSaved">Last Saved At: --:--</span>
   </div>
+  
 
   <div class="settings-wrapper">
     <div class="divider-line"></div>
