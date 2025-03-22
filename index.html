@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaze Production Team</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    :root {
+      scroll-behavior: smooth;
+    }
+    body {
+    margin: 0;
+    padding-top: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+      padding-top: 60px;
+    }
+    body.dark {
+      background-color: #121212;
+      color: #f4f4f4;
+    }
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #1a1a1a;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    nav a {
+      color: white;
+      margin: 0 12px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+    nav a:hover {
+      color: blue;
+    }
+    nav .more-menu {
+      min-width: 150px;
+      right: 0;
+      top: 100%;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      position: absolute;
+      background: #1a1a1a;
+      padding: 10px;
+      display: none;
+      top: 30px;
+      right: 0;
+    }
+    
+    nav .more-menu a {
+      display: block;
+      color: white;
+      padding: 5px;
+      white-space: nowrap;
+    }
+    .section {
+      display: none;
+      padding: 100px 20px 60px;
+      max-width: 1000px;
+      margin: auto;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      margin-top: 80px;
+    }
+    body.dark .section {
+    color: #f4f4f4;
+      background: #1f1f1f;
+    }
+    .section.active {
+      display: block;
+    }
+    .resources-sub a, .command-buttons a {
+      display: inline-block;
+      margin: 6px 8px;
+      padding: 10px 16px;
+      background: #eee;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #333;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+    .resources-sub a:hover, .command-buttons a:hover {
+      background: #ddd;
+      transform: scale(1.05);
+    }
+    body.dark .resources-sub a, body.dark .command-buttons a {
+      background: #333;
+      color: #eee;
+    }
+    body.dark .resources-sub a:hover, body.dark .command-buttons a:hover {
+      background: #444;
+    }
+    .bottom-nav {
+      display: none;
+    }
+    footer {
+      padding: 20px;
+      text-align: center;
+      background: #111;
+      color: white;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+  body {
+    padding-bottom: 100px;
+    
+  }
+      nav {
+        display: none;
+      }
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background: #1a1a1a;
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        z-index: 1000;
+      }
+      .bottom-nav a {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .bottom-nav i {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+      .bottom-nav a.home-button {
+        background: #007bff;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: bold;
+      }
+      .bottom-nav a.home-button i {
+        margin-bottom: 0;
+      }
+      .bottom-nav .more {
+        position: relative;
+      }
+      .bottom-nav .more-menu {
+        position: absolute;
+        bottom: 60px;
+right: 0;
+left: auto;
+min-width: 160px;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        background: #1a1a1a;
+        padding: 10px;
+        display: none;
+        border-radius: 6px;
+      }
+      .bottom-nav .more:hover .more-menu {
+        display: block;
+      }
+      .bottom-nav .more-menu a {
+        display: block;
+        color: white;
+        padding: 6px;
+        white-space: nowrap;
+      }
+    }
+      body.mobile nav {
+      display: none !important;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      transition: background-color 0.4s, box-shadow 0.4s;
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #007bff;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+      background-color: #fff;
+    }
+    body.dark .settings-card {
+      background: #2a2a2a;
+      color: #f4f4f4;
+    }
+    .quick-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .quick-cards .card {
+      background: #f9f9f9;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .dark .quick-cards .card {
+      background: #2a2a2a;
+    }
+    @media (max-width: 768px) {
+      .banner-title {
+        font-size: 2rem !important;
+      }
+    }
+</style>
+
+</head>
+<body>
+  <header>
+    <div><strong>Blaze Production</strong></div>
+<nav style="display: flex; align-items: center; gap: 16px; position: relative; padding-right: 40px;">
+      <div class="nav-links" style="display: flex; gap: 16px;">
+        <a href="#home" onclick="showSection('home')">Home</a>
+        <a href="#resources" onclick="showSection('resources')">Resources</a>
+        <a href="#command-center" onclick="showSection('command-center')">Command Center</a>
+        <a href="#quick-links" onclick="showSection('quick-links')">Quick Links</a>
+      </div><div class="more">
+        <a href="#">More ▾</a>
+        <div class="more-menu" style="padding-right: 10px;">
+  <a href="#settings" onclick="showSection('settings')">⚙️ Settings</a>
+  <div id="settings-drawer" style="display:none; margin-top: 10px;">
+    <label class="toggle-switch">
+      <input type="checkbox" onchange="toggleDarkMode()" id="theme-toggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="bottom-nav">
+    <a href="#resources" onclick="showSection('resources')"><i class="fas fa-book"></i><span>Resources</span></a>
+    <a href="#command-center" onclick="showSection('command-center')"><i class="fas fa-terminal"></i><span>Cmd</span></a>
+    <a href="#home" class="home-button" onclick="showSection('home')"><i class="fas fa-home"></i>Home</a>
+    <a href="#quick-links" onclick="showSection('quick-links')"><i class="fas fa-link"></i><span>Links</span></a>
+    <div class="more">
+      <a href="#"><i class="fas fa-ellipsis-h"></i><span>More</span></a>
+      <div class="more-menu" style="padding-right: 10px;">
+  <a href="#settings" onclick="showSection('settings')">⚙️ Settings</a>
+</div>
+    </div>
+  </div>
+
+  <section id="home" class="section active" style="margin-top: 40px;">
+  <div style="position: relative; width: 100%; overflow: hidden; margin-bottom: 20px; margin-top: 0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+  <img src="https://images.squarespace-cdn.com/content/5965047fe4fcb50195c18796/e19e0aaf-b070-4d49-86f5-cbe1c33a1f50/prod-banner.jpg?content-type=image%2Fjpeg" alt="Blaze Production Banner" style="width: 100%; height: auto; display: block; filter: brightness(60%);">
+  <h1 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 3.2rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.7); margin: 0;" class="banner-title">Blaze Production</h1>
+</div><div style="margin-top: 10px; border-top: 1px solid #ccc; padding-top: 20px;">
+  <h3>About This Website</h3>
+  <p>This website was built to help you serve and grow as part of the Blaze Church Production Team. It’s your central hub for training videos, setup and shutdown checklists, quick troubleshooting tips, and other important resources tailored to each role on the team.</p>
+
+  <h4>How to Use This Site</h4>
+  <p><strong>Resources:</strong> Organized by team roles — Audio, Lighting, Producer, Camera Operator, and Hawkeye — each section includes setup, shutdown, quick troubleshooting tips, training videos, and checklists.</p>
+  <p><strong>Command Center:</strong> A hub for web controls tied to our networked equipment. REMEMBER: If you're not connected to the <em>Blaze Admin</em> Wi-Fi, some links may not work due to device names or local IPs.</p>
+  <p><strong>Quick Links:</strong> Fast access to commonly used tools per position, such as Boxcast for Producers or the Mic Assignment tools for Audio.</p>
+  <p><strong>More:</strong> This menu holds extra utilities — like the Settings page, where you can toggle dark or light mode. Your preferences are saved to your device so you won’t need to reset them every time.</p>
+  <p><strong>Note:</strong> This site and its content may be shared with other churches across the island (and beyond!) to help other teams create distraction-free environments for people to meet Jesus. It's just another way we are blazing a path for lost people to know Him.</p>
+  <p>On mobile devices, the layout shifts to make things easier to tap and find. You can also bookmark this site or add it to your home screen so it works like an app for quick and easy access during weekend services.</p>
+</section>
+
+<section id="resources" class="section">
+  <h2>📚 Resources</h2>Resources</h2>
+  <h3 id="audio-resources">Audio</h3>
+  <div class="resources-sub">
+    <a href="#audio-setup">Setup</a>
+    <a href="#audio-shutdown">Shutdown</a>
+    <a href="#audio-troubleshooting">Quick Troubleshooting</a>
+    <a href="#audio-training">Training Videos</a>
+    <a href="#audio-checklist">Checklist</a>
+  </div>
+
+  <h3 id="lighting-resources">Lighting</h3>
+  <div class="resources-sub">
+    <a href="#lighting-setup">Setup</a>
+    <a href="#lighting-shutdown">Shutdown</a>
+    <a href="#lighting-troubleshooting">Quick Troubleshooting</a>
+    <a href="#lighting-training">Training Videos</a>
+    <a href="#lighting-checklist">Checklist</a>
+  </div>
+
+  <h3 id="producer-resources">Producer</h3>
+  <div class="resources-sub">
+    <a href="#producer-setup">Setup</a>
+    <a href="#producer-shutdown">Shutdown</a>
+    <a href="#producer-troubleshooting">Quick Troubleshooting</a>
+    <a href="#producer-training">Training Videos</a>
+    <a href="#producer-checklist">Checklist</a>
+  </div>
+
+  <h3 id="camera-resources">Camera Operator</h3>
+  <div class="resources-sub">
+    <a href="#camera-setup">Setup</a>
+    <a href="#camera-shutdown">Shutdown</a>
+    <a href="#camera-troubleshooting">Quick Troubleshooting</a>
+    <a href="#camera-training">Training Videos</a>
+    <a href="#camera-checklist">Checklist</a>
+  </div>
+
+  <h3 id="hawkeye-resources">Hawkeye</h3>
+  <div class="resources-sub">
+    <a href="#hawkeye-setup">Setup</a>
+    <a href="#hawkeye-shutdown">Shutdown</a>
+    <a href="#hawkeye-troubleshooting">Quick Troubleshooting</a>
+    <a href="#hawkeye-training">Training Videos</a>
+    <a href="#hawkeye-checklist">Checklist</a>
+  </div>
+</section>
+
+<section id="settings" class="section">
+  <h2>Settings</h2>
+  <p>Customize your experience:</p>
+  <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+    <div style="display: flex; align-items: center; gap: 10px; background: #eee; padding: 12px 16px; border-radius: 8px; color: #333;" class="settings-card">
+      <label class="toggle-switch">
+        <input type="checkbox" onchange="toggleDarkMode()" id="theme-toggle-settings">
+        <span class="slider"></span>
+      </label>
+      <span style="white-space: nowrap;">🌞 / 🌙 Dark Mode</span>
+    </div>
+  </div>
+</section>
+
+<section id="command-center" class="section">
+  <h2>🧠 Command Center</h2>Command Center</h2>
+  <div class="command-buttons">
+    <a href="#">ProPresenter API Trigger: Lighting Scene 1</a>
+    <a href="#">Companion Button: Start Stream + Lights</a>
+  </div>
+</section>
+
+<section id="quick-links" class="section">
+  <h2>Quick Links</h2>
+
+  <div class="quick-cards">
+    <div class="card">
+      <h3>📁 General Links</h3>
+      <div class="resources-sub">
+        <a href="https://blazechurch.org/" target="_blank">Blaze Church Site</a>
+        <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vRUl_5ALKNW9eRpdEJ2orDzBCriL4CizXvWkS7dnADoi9uO-hVerKjLg7ciaeBiqXFLbrcPgbLPdabK/pubhtml" target="_blank">IP Adress Directory</a>
+        <a href="#" target="_blank">Passwords</a>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🎚️ Audio</h3>
+      <div class="resources-sub">
+        <a href="https://www.blazeproduction.org/mics" target="_blank">Mic Assignments</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💡 Lighting</h3>
+      <div class="resources-sub">
+        <a href="#" target="_blank">Dummy Link 1</a>
+        <a href="#" target="_blank">Dummy Link 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎬 Producer</h3>
+      <div class="resources-sub">
+        <a href="#" target="_blank">Dummy Link 1</a>
+        <a href="#" target="_blank">Dummy Link 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📷 Camera Operator</h3>
+      <div class="resources-sub">
+        <a href="#" target="_blank">Dummy Link 1</a>
+        <a href="#" target="_blank">Dummy Link 2</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🎯 Hawkeye</h3>
+      <div class="resources-sub">
+        <a href="#" target="_blank">Dummy Link 1</a>
+        <a href="#" target="_blank">Dummy Link 2</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <footer id="footer"></footer>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.getElementById(id).classList.add('active');
+      history.replaceState(null, '', `#${id}`);
+    }
+
+    window.addEventListener('load', () => {
+      const moreMenu = document.querySelector('nav .more');
+      const dropdown = moreMenu?.querySelector('.more-menu');
+      let dropdownTimeout;
+      if (moreMenu && dropdown) {
+        moreMenu.addEventListener('mouseenter', () => {
+          clearTimeout(dropdownTimeout);
+          dropdown.style.display = 'block';
+        });
+        moreMenu.addEventListener('mouseleave', () => {
+          dropdownTimeout = setTimeout(() => {
+            dropdown.style.display = 'none';
+          }, 200);
+        });
+        dropdown.addEventListener('mouseenter', () => {
+          clearTimeout(dropdownTimeout);
+        });
+        dropdown.addEventListener('mouseleave', () => {
+          dropdownTimeout = setTimeout(() => {
+            dropdown.style.display = 'none';
+          }, 200);
+        });
+      }
+      const settingsDrawer = document.getElementById('settings-drawer');
+      document.addEventListener('click', function(e) {
+        if (!settingsDrawer.contains(e.target) && !e.target.matches('[onclick*="toggleSettingsMenu"]')) {
+          settingsDrawer.style.display = 'none';
+        }
+      });
+      if (window.innerWidth <= 768) document.body.classList.add('mobile');
+      const hash = window.location.hash.replace('#', '');
+      if (hash) {
+        showSection(hash);
+      }
+
+      const footer = document.getElementById('footer');
+      const year = new Date().getFullYear();
+      footer.innerHTML = `&copy; ${year} Blaze Church Production Team`;
+
+      const darkPref = localStorage.getItem('theme') === 'dark';
+      if (darkPref) {
+        document.body.classList.add('dark');
+        const toggle1 = document.getElementById('theme-toggle');
+        const toggle2 = document.getElementById('theme-toggle-settings');
+        if (toggle1) toggle1.checked = true;
+        if (toggle2) toggle2.checked = true;
+      }
+    });
+
+    function toggleDarkMode() {
+  const toggle1 = document.getElementById('theme-toggle');
+  const toggle2 = document.getElementById('theme-toggle-settings');
+
+  // Determine which one triggered the change
+  const sourceToggle = document.activeElement === toggle1 ? toggle1 : toggle2;
+
+  const isDarkNow = sourceToggle.checked;
+  document.body.classList.toggle('dark', isDarkNow);
+  localStorage.setItem('theme', isDarkNow ? 'dark' : 'light');
+
+  // Sync the other toggle
+  if (toggle1 && toggle1 !== sourceToggle) toggle1.checked = isDarkNow;
+  if (toggle2 && toggle2 !== sourceToggle) toggle2.checked = isDarkNow;
+}
+function toggleSettingsMenu(event) {
+      event.preventDefault();
+      const drawer = document.getElementById('settings-drawer');
+      drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>
