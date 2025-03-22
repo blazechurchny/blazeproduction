@@ -8,7 +8,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, getDocs, collection, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
@@ -22,8 +22,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function loadMicAssignments() {
+    const titleEl = document.querySelector(".header-title");
+    const taglineEl = document.querySelector(".tagline");
+    const engineerEl = document.getElementById("scheduledEngineer");
+
+    // Sync UI text (title, tagline, engineer)
+    onSnapshot(doc(db, "uiSettings", "main"), (docSnap) => {
+      const data = docSnap.data();
+      if (data) {
+        if (data.title) titleEl.textContent = data.title;
+        if (data.tagline) taglineEl.textContent = ` ${data.tagline}`;
+        if (data.engineer) engineerEl.textContent = `Scheduled Audio Engineer: ${data.engineer}`;
+      }
+    });
+
+    // Load mic assignments
+    onSnapshot(collection(db, "micAssignments"), async (assignmentsSnapshot) => {
       const micBoard = document.getElementById("micBoard");
+      const lastUpdated = document.getElementById("lastUpdated");
       micBoard.innerHTML = "";
 
       const imagesSnapshot = await getDocs(collection(db, "images"));
@@ -33,7 +49,6 @@
         photos[data.name] = data.photoURL;
       });
 
-      const assignmentsSnapshot = await getDocs(collection(db, "micAssignments"));
       assignmentsSnapshot.forEach(doc => {
         const data = doc.data();
         if (data.name !== "No One") {
@@ -43,128 +58,303 @@
           micCard.innerHTML = `
             <img src="${photos[data.name] || ''}" alt="${data.name}">
             <div class="mic-details">
-              <h3>${data.name}</h3>
               <p class="mic-number">Mic: ${data.micNumber}</p>
-              <p class="iem-pack">In-Ear Pack: ${data.inEarPack}</p>
-              <p>Position: ${data.position}</p>
+              <h3 class="mic-name">${data.name}</h3>
+              ${data.inEarPack ? `<p class="iem-pack">In-Ear Pack: ${data.inEarPack}</p>` : ''}
+              ${data.position ? `<p>Position: ${data.position}</p>` : ''}
             </div>
           `;
 
           micBoard.appendChild(micCard);
         }
       });
-    }
 
-    function forceRefresh() {
-    const url = new URL(window.location.href);
-    url.searchParams.set('t', Date.now()); // Add a timestamp param
-    window.location.href = url.toString(); // Reload with fresh query param
-}
-
-
-    window.onload = loadMicAssignments;
-    setInterval(loadMicAssignments, 30000); // Every 30 seconds
-    setTimeout(() => location.reload(), 43200000); // Every 12 hours
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      lastUpdated.textContent = `Last Updated: ${timeString}`;
+    });
   </script>
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
       margin: 0;
       padding: 0;
-      height: 100vh;
       background-color: #000;
       color: white;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      min-height: 100vh;
+    }
+
+    .header-row {
       position: relative;
-    }
-    h1 { margin: 10px 0; font-size: 2rem; }
-    h3 { font-size: 2.8rem; margin: 0px; color: lightgray; }
-    .mic-container {
-      display: flex;
-      flex-wrap: unset;
-      justify-content: center;
-      align-items: safe;
-      height: 100%;
-      overflow-x: auto;
-      padding: 5px 10px;
-      gap: 10px;
-    }
-    .mic-card {
-      flex: 1 1 auto;
-      max-width: 250px;
-      min-width: 150px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 5px;
-      box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #222;
-    }
-    .mic-card img {
-      width: 100%;
-      height: 70%;
-      border-radius: 10px;
-      object-fit: cover;
-    }
-    .mic-details {
-      width: 100%;
       text-align: center;
-      font-size: 1rem;
-      padding: 5px 0;
+      padding-top: 20px;
+      padding-bottom: 0;
     }
-    .mic-number {
-      font-size: 1.7rem;
-      font-weight: bolder;
-      margin-top: 2%;
-      text-decoration: underline;
+
+    .header-title {
+      font-size: 6vw;
+      margin: 0;
     }
-    .iem-pack {
-      font-size: 1.2rem;
-      font-weight: bolder;
-      margin-top: 2%;
+
+    #lastUpdated {
+      color: #aaa;
+      white-space: nowrap;
     }
-    p { margin-top: 3%; }
-    .refresh-button {
+
+    #scheduledEngineer {
+      color: white;
+      font-weight: bold;
+      display: block;
+      margin-top: 5px;
+    }
+
+    .logo {
       position: absolute;
       top: 10px;
       right: 15px;
-      background: rgba(255, 255, 255, 0.2);
+      height: 65px;
+      display: none;
+    }
+
+    .tagline {
+      text-align: center;
+      color: #ccc;
+      font-size: 0.95rem;
+      margin-top: 5px;
+      display: none;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .tagline::before {
+      content: ' ';
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #444;
+      margin: 10px 15px;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .mic-container {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 12px;
+    }
+
+    .mic-card {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.1);
+      text-align: center;
+      width: 100%;
+    }
+
+    .mic-card img {
+      width: 100%;
+      max-height: 120px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 8px;
+    }
+
+    .mic-details {
+      padding: 8px 4px;
+    }
+
+    .mic-number {
+      font-size: 5vw;
+      font-weight: bold;
+      color: #00ff00;
+      margin: 5px 0;
+    }
+
+    .mic-name {
+      font-size: 6vw;
+      font-weight: bold;
+      margin: 5px 0;
       color: white;
-      border: none;
-      padding: 8px 12px;
-      font-size: 14px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background 0.3s ease-in-out;
+      overflow-wrap: break-word;
     }
-    .refresh-button:hover {
-      background: rgba(255, 255, 255, 0.4);
+
+    .iem-pack {
+      font-size: 3.5vw;
+      font-weight: bold;
     }
-    @media (max-width: 768px) {
+
+    p {
+      margin: 5px 0;
+      font-size: 3.5vw;
+    }
+
+    /* Desktop Styles */
+    @media (min-width: 768px) {
+      .header-title { font-size: 2rem; }
+
+      #lastUpdated {
+        position: absolute;
+        top: 10px;
+        left: 15px;
+        font-size: 0.8rem;
+      }
+
+      #scheduledEngineer {
+        position: absolute;
+        top: 30px;
+        left: 15px;
+        font-size: 0.9rem;
+      }
+
+      .logo { display: block; }
+
+      .tagline { display: block; }
+
       .mic-container {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: stretch;
+        align-items: stretch;
+        height: calc(100vh - 120px);
         overflow-x: hidden;
+        padding: 0 10px;
+        gap: 8px;
       }
+
       .mic-card {
-        max-width: 90%;
-        width: 100%;
-        height: 30%;
+        flex: 1 1 0;
+        height: 100%;
+        margin: 0;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
       }
+
       .mic-card img {
-        max-height: 20vh;
+        height: 65%;
+        max-height: none;
+        object-position: center;
       }
+
+      .mic-details {
+        height: 35%;
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        text-align: center;
+      }
+
+      .mic-number {
+        font-size: 1.4rem;
+        margin: 0.3rem 0;
+      }
+
+      .mic-name {
+        font-size: clamp(1.2rem, 2vw, 2.3rem);
+        font-weight: 800;
+        margin: 0.2rem 0 0.6rem 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .iem-pack,
+      .mic-details p {
+        font-size: 1rem;
+      }
+    }
+
+    /* Mobile Styles */
+    @media (max-width: 767px) {
+      #lastUpdated {
+        display: block;
+        text-align: center;
+        font-size: 0.65rem;
+        margin-top: 6px;
+      }
+
+      #scheduledEngineer {
+        text-align: center;
+        font-weight: bold;
+        font-size: 0.75rem;
+        margin-top: 2px;
+      }
+
+      .mic-card {
+        height: auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 10px;
+      }
+
+      .mic-card img {
+        width: 100px;
+        height: 100px;
+        margin-right: 10px;
+        border-radius: 8px;
+        object-fit: cover;
+        object-position: top;
+      }
+
+      .mic-details {
+        text-align: left;
+        flex: 1;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+      }
+
+      .mic-name {
+        font-size: 1.4rem;
+        color: white;
+        margin-bottom: 0.3rem;
+      }
+
+      .mic-number {
+        color: #00ff00;
+        font-size: 1.3rem;
+        margin-bottom: 0.2rem;
+      }
+
+      .iem-pack,
+      .mic-details p {
+        font-size: 0.9rem;
+      }
+    }
+
+    .mic-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .mic-container::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
     }
   </style>
 </head>
 <body>
-  <h1>Microphone Assignments</h1>
-  <button class="refresh-button" onclick="forceRefresh()">⟳ Force Refresh</button>
+  <div class="header-row">
+    <h1 class="header-title">Microphone Assignments</h1>
+    <span id="lastUpdated">Last Updated: --:--</span>
+    <span id="scheduledEngineer">Scheduled Audio Engineer: --</span>
+    <img src="https://images.squarespace-cdn.com/content/5965047fe4fcb50195c18796/9bb10a74-4cd8-4e84-b8dd-ea9bd03e7e25/bw.png?content-type=image%2Fpng" alt="Logo" class="logo" />
+  </div>
+
+  <div class="tagline">Remember to check batteries in microphones and monitor packs.</div>
+  <div class="divider"></div>
   <div class="mic-container" id="micBoard"></div>
 </body>
 </html>
