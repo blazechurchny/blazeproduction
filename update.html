@@ -8,7 +8,15 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      collection,
+      getDocs,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
@@ -24,8 +32,35 @@
 
     const assignmentsCollection = "micAssignments";
     const imagesCollection = "images";
+    const settingsDocRef = doc(db, "uiSettings", "main");
+
+    async function loadSettings() {
+      const snapshot = await getDoc(settingsDocRef);
+      const data = snapshot.data();
+      if (data) {
+        document.getElementById("titleInput").value = data.title || "";
+        document.getElementById("taglineInput").value = data.tagline || "";
+        document.getElementById("engineerInput").value = data.engineer || "";
+      }
+    }
+
+    async function saveSettings() {
+      const title = document.getElementById("titleInput").value;
+      const tagline = document.getElementById("taglineInput").value;
+      const engineer = document.getElementById("engineerInput").value;
+
+      await setDoc(settingsDocRef, { title, tagline, engineer }, { merge: true });
+
+      alert("✅ Page text updated!");
+    }
 
     async function loadPage() {
+      await loadSettings();
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById("lastSaved").textContent = `Last Saved At: ${timeString}`;
+
       const form = document.getElementById("micForm");
       form.innerHTML = "";
 
@@ -39,51 +74,61 @@
         imageMap[data.name] = data.photoURL;
       });
 
-      const micSnapshot = await getDocs(collection(db, assignmentsCollection));
+      onSnapshot(collection(db, assignmentsCollection), (snapshot) => {
+        form.innerHTML = "";
+        let sectionCount = 1;
 
-      micSnapshot.forEach((docSnap, index) => {
-        const data = docSnap.data();
-        const docId = docSnap.id;
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const docId = docSnap.id;
 
-        const section = document.createElement("div");
-        section.className = "mic-section";
+          const section = document.createElement("div");
+          section.className = "mic-card";
 
-        section.innerHTML = `
-          <h3>Mic ${index + 1}</h3>
-          <div class="mic-box">
-            <label>Name:</label>
-            <select id="name-${docId}" class="name-dropdown">
-              ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? 'selected' : ''}>${name}</option>`).join('')}
-            </select>
-          </div>
-          <div class="mic-box">
-            <label>Mic #:</label>
-            <input type="text" id="micNumber-${docId}" value="${data.micNumber || ''}">
-          </div>
-          <div class="mic-box">
-            <label>In-Ear Pack:</label>
-            <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ''}">
-          </div>
-          <div class="mic-box">
-            <label>Position:</label>
-            <input type="text" id="position-${docId}" value="${data.position || ''}">
-          </div>
-          <div class="mic-box">
-            <img id="photo-${docId}" src="${imageMap[data.name] || ''}" alt="Photo" style="max-width: 100%; border-radius: 8px;">
-          </div>
-        `;
+          const isAssigned = data.name && data.name !== "No One";
 
-        form.appendChild(section);
+          section.innerHTML = `
+            <div class="mic-card-header ${isAssigned ? 'assigned' : 'unassigned'}">
+              <h3>Mic ${sectionCount}</h3>
+              <span class="tag">${isAssigned ? 'Assigned' : 'Empty'}</span>
+            </div>
+            <div class="mic-box">
+              <label>👤 Name:</label>
+              <select id="name-${docId}">
+                ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? 'selected' : ''}>${name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="mic-box">
+              <label>🎤 Mic #:</label>
+              <input type="text" id="micNumber-${docId}" value="${data.micNumber || ''}">
+            </div>
+            <div class="mic-box">
+              <label>🎧 In-Ear Pack:</label>
+              <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ''}">
+            </div>
+            <div class="mic-box">
+              <label>📍 Position:</label>
+              <input type="text" id="position-${docId}" value="${data.position || ''}">
+            </div>
+            <div class="mic-box">
+              <label>🖼️ Photo:</label>
+              <img id="photo-${docId}" src="${imageMap[data.name] || ''}" alt="Photo" class="mic-photo">
+            </div>
+          `;
 
-        document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
-          const newName = e.target.value;
-          document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
+          form.appendChild(section);
+          sectionCount++;
+
+          document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
+            const newName = e.target.value;
+            document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
+          });
         });
       });
     }
 
     async function saveAssignments() {
-      const sections = document.querySelectorAll(".mic-section");
+      const sections = document.querySelectorAll(".mic-card");
 
       for (const section of sections) {
         const id = section.querySelector("select").id.split("-")[1];
@@ -101,11 +146,16 @@
         });
       }
 
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      document.getElementById("lastSaved").textContent = `Last Saved At: ${timeString}`;
+
       alert("✅ Mic assignments saved!");
     }
 
     window.addEventListener("DOMContentLoaded", loadPage);
     window.saveAssignments = saveAssignments;
+    window.saveSettings = saveSettings;
   </script>
 
   <style>
@@ -113,61 +163,266 @@
       background-color: #000;
       color: white;
       font-family: Arial, sans-serif;
+      margin: 0;
       padding: 20px;
-      text-align: center;
     }
-    #micForm {
+
+    .top-bar {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
-      gap: 20px;
-      justify-content: center;
+      margin-bottom: 15px;
     }
-    .mic-section {
-      background: #222;
-      padding: 15px;
-      border-radius: 8px;
-      width: 280px;
-      text-align: left;
-      border: 1px solid #444;
-    }
-    .mic-section h3 {
-      color: #28a745;
+
+    h1 {
+      font-size: 1.8rem;
+      margin: 0 auto;
       text-align: center;
+      width: 100%;
     }
-    .mic-box {
+
+    #lastSaved {
+      font-size: 0.9rem;
+      color: #aaa;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .settings-wrapper {
+      max-width: 1000px;
+      margin: 0 auto 30px;
+      padding: 0 10px;
+    }
+
+    .divider-line {
+      height: 1px;
+      background-color: #444;
+      margin: 20px 0;
+    }
+
+    .settings h2 {
+      text-align: center;
+      color: #28a745;
       margin-bottom: 10px;
     }
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 3px;
+
+    .settings-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-end;
     }
-    select, input {
-      width: 100%;
-      padding: 6px;
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 200px;
+      min-width: 200px;
+    }
+
+    .field-group label {
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #ccc;
+    }
+
+    .settings-row input {
+      padding: 6px 10px;
       border-radius: 4px;
       border: none;
+      font-size: 0.9rem;
     }
-    button {
-      margin-top: 20px;
+
+    .settings-row input::placeholder {
+      font-size: 0.9rem;
+    }
+
+    .settings-row button {
       background: #28a745;
       border: none;
       padding: 10px 20px;
       color: white;
-      font-size: 16px;
+      font-size: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .settings-row button:hover {
+      background: #1e7e34;
+    }
+
+    #micForm {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 20px;
+    }
+
+    .mic-card {
+      background: #1e1e1e;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .mic-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .mic-card-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #28a745;
+    }
+
+    .tag {
+      font-size: 0.75rem;
+      background-color: #444;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .assigned .tag {
+      background-color: #28a745;
+      color: black;
+    }
+
+    .unassigned .tag {
+      background-color: #888;
+      color: white;
+    }
+
+    .mic-box {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 2px;
+      font-size: 0.85rem;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 5px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      border: none;
+      box-sizing: border-box;
+    }
+
+    .mic-photo {
+      width: 100%;
+      max-height: 130px;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 6px;
+    }
+
+    button.save-assignments {
+      margin: 20px auto;
+      display: block;
+      background: #28a745;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      font-size: 15px;
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
+
+    button.save-assignments:hover {
       background: #1e7e34;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+
+      #micForm {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      #lastSaved {
+        position: static;
+        text-align: center;
+        margin-top: 8px;
+      }
+
+      .mic-photo {
+        display: none;
+      }
+
+      .settings-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        margin-bottom: 0;
+      }
+
+      .field-group {
+        width: 100%;
+      }
+
+      .field-group input,
+      .field-group button {
+        margin: 0;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>Update Mic Assignments</h1>
+  <div class="top-bar">
+    <h1>Update Mic Assignments</h1>
+    <span id="lastSaved">Last Saved At: --:--</span>
+  </div>
+
+  <div class="settings-wrapper">
+    <div class="divider-line"></div>
+
+    <div class="settings">
+      <h2>Page Text</h2>
+      <div class="settings-row">
+        <div class="field-group">
+          <label for="titleInput">Title</label>
+          <input type="text" id="titleInput" placeholder="📝 Title..." />
+        </div>
+        <div class="field-group">
+          <label for="taglineInput">Tagline</label>
+          <input type="text" id="taglineInput" placeholder="💬 Tagline..." />
+        </div>
+        <div class="field-group">
+          <label for="engineerInput">Scheduled Audio Engineer</label>
+          <input type="text" id="engineerInput" placeholder="🎛️ Name..." />
+        </div>
+        <div class="field-group">
+          <label>&nbsp;</label>
+          <button onclick="saveSettings()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider-line"></div>
+  </div>
+
   <div id="micForm"></div>
-  <button onclick="saveAssignments()">Save Assignments</button>
+
+  <button class="save-assignments" onclick="saveAssignments()">Save Assignments</button>
 
 </body>
 </html>
