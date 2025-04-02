@@ -14,8 +14,7 @@
       getDoc,
       setDoc,
       collection,
-      getDocs,
-      onSnapshot
+      getDocs
     } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -64,6 +63,7 @@
       const form = document.getElementById("micForm");
       form.innerHTML = "";
 
+      const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
       const namesSnapshot = await getDocs(collection(db, imagesCollection));
       const nameOptions = [];
       const imageMap = {};
@@ -74,57 +74,55 @@
         imageMap[data.name] = data.photoURL;
       });
 
-      onSnapshot(collection(db, assignmentsCollection), (snapshot) => {
-        form.innerHTML = "";
-        let sectionCount = 1;
+      let sectionCount = 1;
+      for (const docId of docOrder) {
+        const docRef = doc(db, assignmentsCollection, docId);
+        const docSnap = await getDoc(docRef);
+        const data = docSnap.data();
+        if (!data) continue;
 
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const docId = docSnap.id;
+        const section = document.createElement("div");
+        section.className = "mic-card";
 
-          const section = document.createElement("div");
-          section.className = "mic-card";
+        const isAssigned = data.name && data.name !== "No One";
 
-          const isAssigned = data.name && data.name !== "No One";
+        section.innerHTML = `
+          <div class="mic-card-header ${isAssigned ? 'assigned' : 'unassigned'}">
+            <h3>Mic ${sectionCount}</h3>
+            <span class="tag">${isAssigned ? 'Assigned' : 'Empty'}</span>
+          </div>
+          <div class="mic-box">
+            <label>👤 Name:</label>
+            <select id="name-${docId}">
+              ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? 'selected' : ''}>${name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="mic-box">
+            <label>🎤 Mic #:</label>
+            <input type="text" id="micNumber-${docId}" value="${data.micNumber || ''}">
+          </div>
+          <div class="mic-box">
+            <label>🎧 In-Ear Pack:</label>
+            <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ''}">
+          </div>
+          <div class="mic-box">
+            <label>📍 Position:</label>
+            <input type="text" id="position-${docId}" value="${data.position || ''}">
+          </div>
+          <div class="mic-box">
+            <label>🖼️ Photo:</label>
+            <img id="photo-${docId}" src="${imageMap[data.name] || ''}" alt="Photo" class="mic-photo">
+          </div>
+        `;
 
-          section.innerHTML = `
-            <div class="mic-card-header ${isAssigned ? 'assigned' : 'unassigned'}">
-              <h3>Mic ${sectionCount}</h3>
-              <span class="tag">${isAssigned ? 'Assigned' : 'Empty'}</span>
-            </div>
-            <div class="mic-box">
-              <label>👤 Name:</label>
-              <select id="name-${docId}">
-                ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? 'selected' : ''}>${name}</option>`).join('')}
-              </select>
-            </div>
-            <div class="mic-box">
-              <label>🎤 Mic #:</label>
-              <input type="text" id="micNumber-${docId}" value="${data.micNumber || ''}">
-            </div>
-            <div class="mic-box">
-              <label>🎧 In-Ear Pack:</label>
-              <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ''}">
-            </div>
-            <div class="mic-box">
-              <label>📍 Position:</label>
-              <input type="text" id="position-${docId}" value="${data.position || ''}">
-            </div>
-            <div class="mic-box">
-              <label>🖼️ Photo:</label>
-              <img id="photo-${docId}" src="${imageMap[data.name] || ''}" alt="Photo" class="mic-photo">
-            </div>
-          `;
+        form.appendChild(section);
+        sectionCount++;
 
-          form.appendChild(section);
-          sectionCount++;
-
-          document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
-            const newName = e.target.value;
-            document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
-          });
+        document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
+          const newName = e.target.value;
+          document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
         });
-      });
+      }
     }
 
     async function saveAssignments() {
@@ -209,18 +207,16 @@
     }
 
     .settings-row {
-  display: block;
-  width: 100%;
-}
+      display: block;
+      width: 100%;
+    }
 
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin-bottom: 10px;
-}
-
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      margin-bottom: 10px;
+    }
 
     .field-group label {
       font-weight: bold;
@@ -236,10 +232,6 @@
       font-size: 0.9rem;
     }
 
-    .settings-row input::placeholder {
-      font-size: 0.9rem;
-    }
-
     .settings-row button {
       background: #28a745;
       border: none;
@@ -249,10 +241,6 @@
       border-radius: 5px;
       cursor: pointer;
       white-space: nowrap;
-    }
-
-    .settings-row button:hover {
-      background: #1e7e34;
     }
 
     #micForm {
@@ -268,7 +256,6 @@
       border: 1px solid #444;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
     }
 
     .mic-card-header {
@@ -306,22 +293,6 @@
       margin-bottom: 10px;
     }
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 2px;
-      font-size: 0.85rem;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 5px;
-      font-size: 0.85rem;
-      border-radius: 4px;
-      border: none;
-      box-sizing: border-box;
-    }
-
     .mic-photo {
       width: 100%;
       max-height: 130px;
@@ -342,91 +313,18 @@
       cursor: pointer;
     }
 
-    button.save-assignments:hover {
-      background: #1e7e34;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-
-      #micForm {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-
-      #lastSaved {
-        position: static;
-        text-align: center;
-        margin-top: 8px;
-      }
-
-      .mic-photo {
-        display: none;
-      }
-
-      .settings-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-        margin-bottom: 0;
-      }
-
-      .field-group {
-        width: 100%;
-      }
-
-      .field-group input,
-      .field-group button {
-        margin: 0;
-      }
-    }
-
     .open-btn {
-  background-color: #28a745;
-  color: white;
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  border-radius: 5px;
-  text-decoration: none;
-  position: absolute;
-  top: 20px;
-  z-index: 10;
-  transition: background 0.3s ease-in-out;
-}
-
-.open-btn:hover {
-  background-color: #1e7e34;
-}
-
-.left-btn {
-  left: 15px;
-}
-
-.right-btn {
-  right: 15px;
-}
-
-@media (max-width: 600px) {
-  .left-btn, .right-btn {
-    position: static;
-    display: block;
-    text-align: center;
-    margin: 5px auto;
-  }
-
-  .top-bar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  #lastSaved {
-    margin-top: 8px;
-  }
-}
-
+      background-color: #28a745;
+      color: white;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 5px;
+      text-decoration: none;
+      position: absolute;
+      top: 20px;
+      left: 15px;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -434,10 +332,8 @@
   <div class="top-bar">
     <a href="https://blazeproduction.org/mics" target="_blank" class="open-btn left-btn">Open Display Screen</a>
     <h1>Update Mic Assignments</h1>
-    <!-- <a href="https://blazeproduction.org/mics" target="_blank" class="open-btn right-btn">Open Display Screen</a> -->
     <span id="lastSaved">Last Saved At: --:--</span>
   </div>
-  
 
   <div class="settings-wrapper">
     <div class="divider-line"></div>
@@ -470,6 +366,5 @@
   <div id="micForm"></div>
 
   <button class="save-assignments" onclick="saveAssignments()">Save Assignments</button>
-
 </body>
 </html>
