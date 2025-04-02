@@ -8,7 +8,7 @@
   <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, getDocs, collection, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, getDoc, getDocs, collection, onSnapshot, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
@@ -25,8 +25,9 @@
     const titleEl = document.querySelector(".header-title");
     const taglineEl = document.querySelector(".tagline");
     const engineerEl = document.getElementById("scheduledEngineer");
+    const micBoard = document.getElementById("micBoard");
+    const lastUpdated = document.getElementById("lastUpdated");
 
-    // Sync UI text (title, tagline, engineer)
     onSnapshot(doc(db, "uiSettings", "main"), (docSnap) => {
       const data = docSnap.data();
       if (data) {
@@ -36,42 +37,49 @@
       }
     });
 
-    // Load mic assignments
-    onSnapshot(collection(db, "micAssignments"), async (assignmentsSnapshot) => {
-      const micBoard = document.getElementById("micBoard");
-      const lastUpdated = document.getElementById("lastUpdated");
-      micBoard.innerHTML = "";
+    const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    let cachedPhotos = {};
 
-      const imagesSnapshot = await getDocs(collection(db, "images"));
-      const photos = {};
-      imagesSnapshot.forEach(doc => {
+    async function loadImages() {
+      const snapshot = await getDocs(collection(db, "images"));
+      snapshot.forEach(doc => {
         const data = doc.data();
-        photos[data.name] = data.photoURL;
+        cachedPhotos[data.name] = data.photoURL;
       });
+    }
 
-      assignmentsSnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.name !== "No One") {
+    loadImages().then(() => {
+      docOrder.forEach(docId => {
+        const micRef = doc(db, "micAssignments", docId);
+        onSnapshot(micRef, (docSnap) => {
+          const data = docSnap.data();
+          const existingCard = document.getElementById(`card-${docId}`);
+          if (existingCard) existingCard.remove();
+
+          if (!data || data.name === "No One") return;
+
           const micCard = document.createElement("div");
           micCard.classList.add("mic-card");
+          micCard.id = `card-${docId}`;
 
           micCard.innerHTML = `
-            <img src="${photos[data.name] || ''}" alt="${data.name}">
+            <img src="${cachedPhotos[data.name] || ''}" alt="${data.name}">
             <div class="mic-details">
               <p class="mic-number">Mic: ${data.micNumber}</p>
               <h3 class="mic-name">${data.name}</h3>
               ${data.inEarPack ? `<p class="iem-pack">In-Ear Pack: ${data.inEarPack}</p>` : ''}
               ${data.position ? `<p>Position: ${data.position}</p>` : ''}
+              ${data.battery !== undefined ? `<p>🔋 Battery: ${data.battery}%</p>` : ''}
             </div>
           `;
 
           micBoard.appendChild(micCard);
-        }
-      });
 
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      lastUpdated.textContent = `Last Updated: ${timeString}`;
+          const now = new Date();
+          const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          lastUpdated.textContent = `Last Updated: ${timeString}`;
+        });
+      });
     });
   </script>
 
@@ -199,7 +207,6 @@
       font-size: 3.5vw;
     }
 
-    /* Desktop Styles */
     @media (min-width: 768px) {
       .header-title { font-size: 2rem; }
 
@@ -275,7 +282,6 @@
       }
     }
 
-    /* Mobile Styles */
     @media (max-width: 767px) {
       #lastUpdated {
         display: block;
@@ -352,7 +358,6 @@
     <span id="scheduledEngineer">Scheduled Audio Engineer: --</span>
     <img src="https://images.squarespace-cdn.com/content/5965047fe4fcb50195c18796/9bb10a74-4cd8-4e84-b8dd-ea9bd03e7e25/bw.png?content-type=image%2Fpng" alt="Logo" class="logo" />
   </div>
-
   <div class="tagline">Remember to check batteries in microphones and monitor packs.</div>
   <div class="divider"></div>
   <div class="mic-container" id="micBoard"></div>
