@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Blaze Live Admin</title>
+
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+
+<style>
+  body {
+    font-family: Inter, sans-serif;
+    background: #f5f7fa;
+    color: #1a1f36;
+    padding: 2rem;
+    max-width: 1100px;
+    margin: auto;
+  }
+
+  h1 {
+    text-align: center;
+    color: #00bfa5;
+    margin-bottom: 1.5rem;
+  }
+
+  label {
+    display: block;
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+
+  input[type="text"],
+  input[type="datetime-local"],
+  input[type="number"] {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .switch input {opacity:0;width:0;height:0;}
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 28px;
+  }
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; width: 20px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  input:checked + .slider {
+    background-color: #00bfa5;
+  }
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    font-weight: 600;
+    gap: 10px;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0.9rem;
+    border-radius: 8px;
+    background: #00bfa5;
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+  }
+  button:hover {
+    background: #009e8c;
+  }
+
+  #status {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: #555;
+  }
+
+  .preview-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .preview-box {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    padding: 1rem;
+    text-align: center;
+  }
+  iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: none;
+    border-radius: 8px;
+  }
+  #countdown-preview, #site-preview-status {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #00bfa5;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<h1>🎥 Blaze Live Admin</h1>
+
+<label>Title</label>
+<input type="text" id="title" placeholder="Sunday Live Stream" />
+
+<label>Next Stream (Date & Time)</label>
+<input type="datetime-local" id="nextStream" />
+
+<label>
+  <input type="checkbox" id="repeatWeekly" /> Repeat Weekly
+</label>
+
+<div class="toggle-label">
+  <label class="switch">
+    <input type="checkbox" id="hideCountdown">
+    <span class="slider"></span>
+  </label>
+  <span>Hide Countdown (Force Live Mode)</span>
+</div>
+
+<label>Hide Countdown Duration (Hours)</label>
+<input type="number" id="hideDuration" min="1" max="12" value="2" />
+
+<button id="saveBtn">💾 Save Settings</button>
+<p id="status">Connecting...</p>
+
+<!-- 3 Preview Panels -->
+<div class="preview-section">
+  <div class="preview-box">
+    <h3>Countdown Preview</h3>
+    <div id="countdown-preview">--</div>
+  </div>
+
+  <div class="preview-box">
+    <h3>YouTube Embed</h3>
+    <iframe id="yt-preview" src="https://www.youtube.com/embed/live_stream?channel=UCwBc6Ah_BUwwjYOQv03_L7g" allowfullscreen></iframe>
+  </div>
+
+  <div class="preview-box">
+    <h3>Website Status</h3>
+    <div id="site-preview-status">Loading...</div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCwTfq7SEr2gYdYrgZYf73NIqoLFM2QDYA",
+  authDomain: "blaze-production-live.firebaseapp.com",
+  projectId: "blaze-production-live",
+  storageBucket: "blaze-production-live.appspot.com",
+  messagingSenderId: "342217432447",
+  appId: "1:342217432447:web:33e7e216546df860bace4a",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const docRef = db.collection("liveSettings").doc("main");
+
+const titleInput = document.getElementById("title");
+const nextInput = document.getElementById("nextStream");
+const repeatBox = document.getElementById("repeatWeekly");
+const hideBox = document.getElementById("hideCountdown");
+const durationInput = document.getElementById("hideDuration");
+const saveBtn = document.getElementById("saveBtn");
+const status = document.getElementById("status");
+const countdownPreview = document.getElementById("countdown-preview");
+const siteStatus = document.getElementById("site-preview-status");
+
+let countdownTimer = null;
+
+// 🔧 Fix timezone drift once and for all
+function toLocalDatetimeString(date) {
+  const offset = date.getTimezoneOffset() * 60000;
+  const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  return localISOTime;
+}
+function fromLocalDatetimeString(str) {
+  // interpret local date/time correctly
+  const [datePart, timePart] = str.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  return new Date(year, month - 1, day, hour, minute);
+}
+
+// 🔄 Live Firestore listener
+docRef.onSnapshot((doc) => {
+  if (!doc.exists) {
+    status.textContent = "⚠️ No settings document found.";
+    return;
+  }
+  const data = doc.data();
+  titleInput.value = data.title || "";
+  if (data.nextStream) nextInput.value = toLocalDatetimeString(new Date(data.nextStream));
+  repeatBox.checked = data.repeatWeekly || false;
+  hideBox.checked = data.hideCountdown || false;
+  durationInput.value = data.hideDurationHours || 2;
+
+  status.textContent = `Synced at ${new Date().toLocaleTimeString()}`;
+  updateCountdownPreview(data);
+  updateWebsiteStatus(data);
+});
+
+// 💾 Save settings
+saveBtn.addEventListener("click", async () => {
+  if (!nextInput.value) return alert("Please select a stream date/time.");
+  const nextDate = fromLocalDatetimeString(nextInput.value);
+  const payload = {
+    title: titleInput.value.trim(),
+    nextStream: nextDate.toISOString(),
+    repeatWeekly: repeatBox.checked,
+    hideCountdown: hideBox.checked,
+    hideDurationHours: parseFloat(durationInput.value) || 2,
+    repeatDay: repeatBox.checked ? nextDate.getDay() : null,
+    repeatTime: repeatBox.checked ? `${nextDate.getHours().toString().padStart(2,"0")}:${nextDate.getMinutes().toString().padStart(2,"0")}` : null,
+  };
+  await docRef.set(payload, { merge: true });
+  status.textContent = "✅ Settings saved!";
+});
+
+// Toggle live mode instantly
+hideBox.addEventListener("change", async () => {
+  await docRef.update({ hideCountdown: hideBox.checked });
+  status.textContent = hideBox.checked ? "Countdown hidden (live mode)" : "Countdown visible";
+});
+
+// Countdown preview logic
+function updateCountdownPreview(data) {
+  clearInterval(countdownTimer);
+  const title = data.title || "Upcoming Stream";
+  const next = new Date(data.nextStream);
+  const now = new Date();
+  const duration = (data.hideDurationHours || 2) * 60 * 60 * 1000;
+
+  if (data.hideCountdown) {
+    countdownPreview.textContent = "⏺ Hidden (Live Mode)";
+    return;
+  }
+
+  if (now >= next && now <= new Date(next.getTime() + duration)) {
+    countdownPreview.textContent = "🎥 Currently Live!";
+    return;
+  }
+
+  function tick() {
+    const diff = next - new Date();
+    if (diff <= 0) {
+      countdownPreview.textContent = "Stream starting now!";
+      clearInterval(countdownTimer);
+      return;
+    }
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff / (1000*60*60)) % 24);
+    const m = Math.floor((diff / (1000*60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    countdownPreview.textContent = `${title}: ${d}d ${h}h ${m}m ${s}s`;
+  }
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// 👀 Website status (real-time reflection of front-end state)
+function updateWebsiteStatus(data) {
+  const now = new Date();
+  const next = new Date(data.nextStream);
+  const duration = (data.hideDurationHours || 2) * 60 * 60 * 1000;
+  let stateText = "";
+
+  if (data.hideCountdown) {
+    stateText = "🟢 Showing LIVE stream (forced)";
+  } else if (now >= next && now <= new Date(next.getTime() + duration)) {
+    stateText = "🟢 Stream is LIVE on website";
+  } else if (now < next) {
+    const diff = next - now;
+    const hours = Math.floor(diff / (1000*60*60));
+    const mins = Math.floor((diff / (1000*60)) % 60);
+    stateText = `🕒 Showing countdown (${hours}h ${mins}m until live)`;
+  } else {
+    stateText = "⚫ Stream ended (waiting for next)";
+  }
+  siteStatus.textContent = stateText;
+}
+</script>
+</body>
+</html>
