@@ -472,7 +472,7 @@
           micCard.innerHTML = `
             <div class="mic-inner">
               <div class="mic-top">
-                <p class="mic-number">${escapeHtml(data.micNumber ? `Mic ${data.micNumber}` : 'Mic')}</p>
+                <p class="mic-number">${escapeHtml(data.micNumber ? `${data.micNumber}` : 'Mic')}</p>
               </div>
 
               <div class="mic-middle">
