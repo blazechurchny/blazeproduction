@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mic Assignment</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-section {
+      flex-shrink: 0;
+    }
+
+    .header-row {
+      position: relative;
+      text-align: center;
+      padding-top: 20px;
+      padding-bottom: 5px;
+    }
+
+    .header-title {
+      font-size: 6vw;
+      margin: 0;
+    }
+
+    #lastUpdated {
+      color: #aaa;
+      white-space: nowrap;
+    }
+
+    #scheduledEngineer {
+      color: white;
+      font-weight: bold;
+      display: inline-block;
+      margin-top: 5px;
+    }
+
+    .toggle-wrapper {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    #toggleIframeBtn {
+      background-color: #333;
+      color: white;
+      border: 1px solid #666;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background-color 0.2s;
+    }
+
+    #toggleIframeBtn:hover {
+      background-color: #444;
+    }
+
+    .logo {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      height: 65px;
+      display: none;
+    }
+
+    .tagline {
+      text-align: center;
+      color: #ccc;
+      font-size: 0.95rem;
+      margin-top: 5px;
+      display: none;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    .tagline::before { content: ' '; }
+
+    .divider {
+      height: 1px;
+      background-color: #444;
+      margin: 10px 15px;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .iframe-wrapper {
+      display: none;
+      position: relative;
+      height: 143px; /* 260px * 0.55 */
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .companion-iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 260px;
+      transform: scale(0.55);
+      transform-origin: top center;
+      border: none;
+    }
+
+    .mic-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 12px;
+    }
+
+    .mic-card {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 8px;
+      box-shadow: 2px 2px 10px rgba(255, 255, 255, 0.1);
+      text-align: center;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mic-card img {
+      height: 65%;
+      width: 100%;
+      object-fit: cover;
+      object-position: top;
+      border-radius: 8px;
+    }
+
+    .mic-details {
+      height: 35%;
+      padding: 8px 4px;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      text-align: center;
+    }
+
+    .mic-number { font-size: 5vw; font-weight: bold; color: #00ff00; margin: 5px 0; }
+    .mic-name { font-size: 6vw; font-weight: bold; margin: 5px 0; color: white; overflow-wrap: break-word; }
+    .iem-pack { font-size: 3.5vw; font-weight: bold; }
+    p { margin: 5px 0; font-size: 3.5vw; }
+
+    @media (min-width: 768px) {
+      .header-title { font-size: 2rem; }
+      #lastUpdated { position: absolute; top: 10px; left: 15px; font-size: 0.8rem; }
+      #scheduledEngineer { position: absolute; top: 30px; left: 15px; font-size: 0.9rem; }
+      .toggle-wrapper { position: absolute; top: 55px; left: 15px; }
+      .logo { display: block; }
+      .tagline { display: block; }
+      .mic-container {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: stretch;
+        align-items: stretch;
+        padding: 0 10px;
+        gap: 8px;
+      }
+      .mic-card { height: 100%; margin: 0; }
+      .mic-card img { object-position: top; }
+      .mic-number { font-size: 1.4rem; margin: 0.3rem 0; }
+      .mic-name { font-size: clamp(1.2rem, 2vw, 2.3rem); font-weight: 800; margin: 0.2rem 0 0.6rem 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .iem-pack, .mic-details p { font-size: 1rem; }
+    }
+
+    @media (max-width: 767px) {
+      .iframe-wrapper, .toggle-wrapper { display: none !important; }
+      .mic-container { flex-direction: column; }
+      .mic-card {
+        flex-direction: row;
+        align-items: center;
+        padding: 10px;
+      }
+      .mic-card img {
+        width: 100px;
+        height: 100px;
+        margin-right: 10px;
+      }
+      .mic-details {
+        flex: 1;
+        text-align: left;
+        padding: 0;
+      }
+      .mic-name { font-size: 1.4rem; margin-bottom: 0.3rem; }
+      .mic-number { font-size: 1.3rem; margin-bottom: 0.2rem; }
+      .iem-pack, .mic-details p { font-size: 0.9rem; }
+    }
+
+    .mic-container::-webkit-scrollbar { width: 8px; }
+    .mic-container::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="top-section">
+    <div class="header-row">
+      <h1 class="header-title">Microphone Assignments for April 6th</h1>
+      <span id="lastUpdated">Last Updated: --:--</span>
+      <span id="scheduledEngineer">Scheduled Audio Engineer: --</span>
+      <div class="toggle-wrapper">
+        <button type="button" id="toggleIframeBtn">Show Battery Levels</button>
+      </div>
+    </div>
+
+    <div class="tagline">Remember to check your microphone and pack batteries</div>
+
+    <div class="iframe-wrapper" id="iframeWrapper">
+      <iframe
+        class="companion-iframe"
+        id="companionIframe"
+        src="http://192.168.50.224:8443/tablet?max_col=5&max_row=0&min_col=0&noconfigure=1&nofullscreen=1&pages=3">
+      </iframe>
+    </div>
+
+    <div class="divider"></div>
+  </div>
+
+  <div class="mic-container" id="micBoard"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
+    import { getFirestore, getDoc, getDocs, collection, onSnapshot, doc } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
+      authDomain: "micassignments.firebaseapp.com",
+      projectId: "micassignments",
+      storageBucket: "micassignments.appspot.com",
+      messagingSenderId: "1010248680745",
+      appId: "1:1010248680745:web:b82c69767cc857269c2338"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const titleEl = document.querySelector(".header-title");
+    const taglineEl = document.querySelector(".tagline");
+    const engineerEl = document.getElementById("scheduledEngineer");
+    const micBoard = document.getElementById("micBoard");
+    const lastUpdated = document.getElementById("lastUpdated");
+
+    onSnapshot(doc(db, "uiSettings", "main"), (docSnap) => {
+      const data = docSnap.data();
+      if (data) {
+        if (data.title) titleEl.textContent = data.title;
+        if (data.tagline) taglineEl.textContent = ` ${data.tagline}`;
+        if (data.engineer) engineerEl.textContent = `Scheduled Audio Engineer: ${data.engineer}`;
+      }
+    });
+
+    const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    let cachedPhotos = {};
+
+    async function loadImages() {
+      const snapshot = await getDocs(collection(db, "images"));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        cachedPhotos[data.name] = data.photoURL;
+      });
+    }
+
+    loadImages().then(() => {
+      docOrder.forEach(docId => {
+        const micRef = doc(db, "micAssignments", docId);
+        onSnapshot(micRef, (docSnap) => {
+          const data = docSnap.data();
+          const existingCard = document.getElementById(`card-${docId}`);
+          if (existingCard) existingCard.remove();
+
+          if (!data || data.name === "No One") return;
+
+          const micCard = document.createElement("div");
+          micCard.classList.add("mic-card");
+          micCard.id = `card-${docId}`;
+
+          micCard.innerHTML = `
+            <img src="${cachedPhotos[data.name] || ''}" alt="${data.name}">
+            <div class="mic-details">
+              <p class="mic-number">Mic: ${data.micNumber}</p>
+              <h3 class="mic-name">${data.name}</h3>
+              ${data.inEarPack ? `<p class="iem-pack">In-Ear Pack: ${data.inEarPack}</p>` : ''}
+              ${data.position ? `<p>Position: ${data.position}</p>` : ''}
+              ${data.battery !== undefined ? `<p>🔋 Battery: ${data.battery}%</p>` : ''}
+            </div>
+          `;
+
+          micBoard.appendChild(micCard);
+
+          const now = new Date();
+          const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          lastUpdated.textContent = `Last Updated: ${timeString}`;
+        });
+      });
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById("toggleIframeBtn");
+      const wrapper = document.getElementById("iframeWrapper");
+
+      const savedState = localStorage.getItem("showBatteryLevels");
+      if (savedState === "true") {
+        wrapper.style.display = "block";
+        toggleBtn.textContent = "Hide Battery Levels";
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        const showing = wrapper.style.display === "block";
+        wrapper.style.display = showing ? "none" : "block";
+        toggleBtn.textContent = showing ? "Show Battery Levels" : "Hide Battery Levels";
+        localStorage.setItem("showBatteryLevels", !showing);
+      });
+    });
+  </script>
+  <script>
+// Refresh the page every 2 hours (7200000 ms)
+setTimeout(() => {
+  location.reload();
+}, 7200000);
+</script>
+</body>
+</html>
