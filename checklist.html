@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaze Production Checklist</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="checklist.css" />
+</head>
+
+<body data-page="viewer">
+  <main class="section active checklist-page">
+    <div class="page-hero">
+      <div>
+        <p class="eyebrow">Blaze Production</p>
+        <h1>Position Checklists</h1>
+        <p class="muted">Pick your position, follow the steps, and keep the Sunday gremlins away.</p>
+      </div>
+    </div>
+
+    <section class="role-strip" id="roleTabs" aria-label="Production positions"></section>
+
+    <section class="mode-toggle three-tabs" aria-label="View mode">
+      <button class="mode-btn active" data-mode="checklist">
+        <i class="fas fa-list-check"></i> Checklist
+      </button>
+
+      <button class="mode-btn" data-mode="info">
+        <i class="fas fa-circle-info"></i> Information
+      </button>
+
+      <button class="mode-btn" data-mode="cheatsheet">
+        <i class="fas fa-table"></i> Cheat Sheet
+      </button>
+    </section>
+
+    <section class="progress-card" id="progressCard">
+      <div>
+        <p class="muted small">Progress</p>
+        <strong id="progressText">0 / 0 completed</strong>
+      </div>
+
+      <button class="ghost-btn" id="resetCurrent">
+        <i class="fas fa-rotate-left"></i> Reset
+      </button>
+
+      <div class="progress-bar">
+        <span id="progressFill"></span>
+      </div>
+    </section>
+
+    <section id="viewerContent" class="content-stack"></section>
+  </main>
+
+  <script type="module" src="checklist.js"></script>
+</body>
+</html>

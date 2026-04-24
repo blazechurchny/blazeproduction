@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blaze Checklist Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="checklist.css" />
+</head>
+
+<body data-page="admin">
+  <main class="section active admin-shell">
+    <div class="page-hero">
+      <div>
+        <p class="eyebrow">Blaze Production</p>
+        <h1>Checklist Admin</h1>
+        <p class="muted">Edit positions, info cards, checklist steps, cheat sheets, photos, warnings, and reset timing.</p>
+      </div>
+
+      <a class="admin-link" href="checklist.html">
+        <i class="fas fa-eye"></i> View Checklist
+      </a>
+    </div>
+
+    <section class="admin-toolbar card">
+      <label>
+        <span>Position</span>
+        <select id="adminRoleSelect"></select>
+      </label>
+
+      <button id="addRoleBtn" class="secondary-btn">
+        <i class="fas fa-plus"></i> Add Position
+      </button>
+
+      <button id="saveAdminBtn" class="primary-btn">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </section>
+
+    <details class="admin-accordion card" open>
+      <summary>
+        <span><i class="fas fa-gear"></i> Global Settings</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <label>
+          <span>Reset checked items every X hours</span>
+          <input id="resetHoursInput" type="number" min="1" step="1" value="24" />
+        </label>
+
+        <p class="muted small">
+          This only resets each device’s local checklist progress. It does not delete or reset checklist content.
+        </p>
+      </div>
+    </details>
+
+    <details class="admin-accordion card" open>
+      <summary>
+        <span><i class="fas fa-id-badge"></i> Position Settings</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <label>
+          <span>Position Name</span>
+          <input id="roleTitleInput" type="text" placeholder="ProPresenter" />
+        </label>
+
+        <label>
+          <span>Short Description</span>
+          <textarea id="roleDescriptionInput" rows="3" placeholder="What this position handles..."></textarea>
+        </label>
+      </div>
+    </details>
+
+    <details class="admin-accordion card">
+      <summary>
+        <span><i class="fas fa-circle-info"></i> Information Tab</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <div class="section-heading-row">
+          <h2>Information Cards</h2>
+
+          <button id="addInfoBtn" class="secondary-btn">
+            <i class="fas fa-plus"></i> Add Info
+          </button>
+        </div>
+
+        <div id="infoEditor" class="editor-list"></div>
+      </div>
+    </details>
+
+    <details class="admin-accordion card">
+      <summary>
+        <span><i class="fas fa-list-check"></i> Checklist Items</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <div class="section-heading-row">
+          <h2>Checklist Items</h2>
+
+          <button id="addItemBtn" class="secondary-btn">
+            <i class="fas fa-plus"></i> Add Item
+          </button>
+        </div>
+
+        <div id="itemEditor" class="editor-list"></div>
+      </div>
+    </details>
+
+    <details class="admin-accordion card">
+      <summary>
+        <span><i class="fas fa-table"></i> Cheat Sheet</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <div class="section-heading-row">
+          <h2>Rack Gear</h2>
+
+          <button id="addRackBtn" class="secondary-btn">
+            <i class="fas fa-plus"></i> Add Gear
+          </button>
+        </div>
+
+        <div id="rackEditor" class="editor-list"></div>
+
+        <hr class="soft-divider" />
+
+        <div class="section-heading-row">
+          <h2>Apps</h2>
+
+          <button id="addAppBtn" class="secondary-btn">
+            <i class="fas fa-plus"></i> Add App
+          </button>
+        </div>
+
+        <div id="appsEditor" class="editor-list"></div>
+      </div>
+    </details>
+
+    <details class="admin-accordion card" id="dataTools">
+      <summary>
+        <span><i class="fas fa-database"></i> Data Tools</span>
+        <i class="fas fa-chevron-down accordion-icon"></i>
+      </summary>
+
+      <div class="accordion-content">
+        <p class="muted">
+          Export makes a backup. Import restores from pasted JSON and saves it to Firebase.
+        </p>
+
+        <div class="button-row">
+          <button id="exportBtn" class="secondary-btn">
+            <i class="fas fa-file-export"></i> Export JSON
+          </button>
+
+          <button id="importBtn" class="secondary-btn">
+            <i class="fas fa-file-import"></i> Import JSON
+          </button>
+        </div>
+
+        <textarea id="dataBox" rows="8" placeholder="Exported JSON appears here. Paste JSON here to import."></textarea>
+      </div>
+    </details>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="checklist.js"></script>
+</body>
+</html>
