@@ -479,3 +479,28 @@ summary {
 .cheatsheet-img {
   width: 80px;
 }
+
+.back-home {
+  margin-top: 40px;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #111;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.home-btn:hover {
+  background: #007bff;
+  transform: translateY(-2px);
+}

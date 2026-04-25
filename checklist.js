@@ -5,7 +5,8 @@ import {
   getDocs,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -118,6 +119,10 @@ async function saveRoleToFirestore(role) {
   };
 
   await setDoc(doc(db, "roles", role.id), cleanRole, { merge: true });
+}
+
+async function deleteRoleFromFirestore(roleId) {
+  await deleteDoc(doc(db, "roles", roleId));
 }
 
 async function saveAllRolesToFirestore() {
@@ -344,11 +349,16 @@ function initAdmin() {
   renderAdminRoleSelect();
   renderAdmin();
 
-  document.getElementById("adminRoleSelect")?.addEventListener("change", e => {
-    collectAdmin();
-    selectedRoleId = e.target.value;
-    renderAdmin();
-  });
+document.getElementById("adminRoleSelect")?.addEventListener("change", e => {
+  const newRoleId = e.target.value;
+
+  collectAdmin(false);
+
+  selectedRoleId = newRoleId;
+
+  renderAdminRoleSelect();
+  renderAdmin();
+});
 
   document.getElementById("saveAdminBtn")?.addEventListener("click", async () => {
     try {
