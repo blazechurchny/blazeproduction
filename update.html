@@ -36,12 +36,12 @@
     // ✅ Defines ordering AND which ones feed Vox 1–4
     const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 
-    function cleanName(v) {
-      if (!v) return "";
-      const s = String(v).trim();
-      if (!s || s === "No One") return "";
-      return s;
-    }
+function cleanName(v) {
+  if (!v) return "";
+  const s = String(v).trim();
+  if (!s) return "";
+  return s; // keep "No One"
+}
 
     async function loadSettings() {
       const snapshot = await getDoc(settingsDocRef);
@@ -163,15 +163,21 @@
           }, { merge: true });
         }
 
-        // ✅ Build Vox 1–4 from Mic 1–4 ONLY (docOrder[0..3])
-        const vox = {
-          vox1: cleanName(document.getElementById(`name-${docOrder[0]}`)?.value),
-          vox2: cleanName(document.getElementById(`name-${docOrder[1]}`)?.value),
-          vox3: cleanName(document.getElementById(`name-${docOrder[2]}`)?.value),
-          vox4: cleanName(document.getElementById(`name-${docOrder[3]}`)?.value),
-          vox5: cleanName(document.getElementById(`name-${docOrder[4]}`)?.value),
-          updatedAt: new Date().toISOString()
-        };
+const getVoxValue = (index) => {
+  const val = cleanName(document.getElementById(`name-${docOrder[index]}`)?.value);
+
+  if (!val) return `Vox ${index + 1}`;   // fallback if somehow empty
+  return val; // includes "No One"
+};
+
+const vox = {
+  vox1: getVoxValue(0),
+  vox2: getVoxValue(1),
+  vox3: getVoxValue(2),
+  vox4: getVoxValue(3),
+  vox5: getVoxValue(4),
+  updatedAt: new Date().toISOString()
+};
 
         // ✅ Overwrite companion doc so it stays clean
         await setDoc(doc(db, "companion", "voxNames"), vox);
