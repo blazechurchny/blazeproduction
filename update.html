@@ -169,6 +169,7 @@
           vox2: cleanName(document.getElementById(`name-${docOrder[1]}`)?.value),
           vox3: cleanName(document.getElementById(`name-${docOrder[2]}`)?.value),
           vox4: cleanName(document.getElementById(`name-${docOrder[3]}`)?.value),
+          vox5: cleanName(document.getElementById(`name-${docOrder[4]}`)?.value),
           updatedAt: new Date().toISOString()
         };
 
@@ -179,7 +180,7 @@
         const timeString = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         document.getElementById("lastSaved").textContent = `Last Saved At: ${timeString}`;
 
-        alert("✅ Saved! Vox 1–4 now mirror Mic 1–4 automatically.");
+        alert("✅ Saved! Vox 1–5 now mirror Mic 1–5 automatically.");
       } catch (err) {
         console.error("❌ saveAssignments failed:", err);
         alert("❌ Save failed. Open console for details.");
