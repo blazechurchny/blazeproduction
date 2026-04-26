@@ -164,10 +164,14 @@ function cleanName(v) {
         }
 
 const getVoxValue = (index) => {
-  const val = cleanName(document.getElementById(`name-${docOrder[index]}`)?.value);
+  const raw = document.getElementById(`name-${docOrder[index]}`)?.value;
 
-  if (!val) return `Vox ${index + 1}`;   // fallback if somehow empty
-  return val; // includes "No One"
+  // If it's empty OR explicitly "No One" → fallback
+  if (!raw || raw === "No One") {
+    return `Vox ${index + 1}`;
+  }
+
+  return cleanName(raw);
 };
 
 const vox = {
