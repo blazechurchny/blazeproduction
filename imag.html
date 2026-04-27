@@ -1,0 +1,521 @@
+<!-- imag.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMag Control</title>
+  <link rel="stylesheet" href="imag.css" />
+</head>
+
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <p class="eyebrow">Resolume Control</p>
+        <h1>iMag Transform</h1>
+      </div>
+
+      <button id="refreshBtn" class="small-btn">Refresh</button>
+    </header>
+
+    <section class="status-card">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting to Resolume...</span>
+    </section>
+
+    <section class="selector-card">
+      <label for="clipSelect">Clip Group</label>
+      <select id="clipSelect">
+        <option>Worship iMag</option>
+        <option>Message iMag</option>
+        <option>Next Steps iMag</option>
+        <option>Kids iMag</option>
+        <option>Extra iMag</option>
+      </select>
+
+      <p class="hint">
+        This controls every clip with the selected name.
+      </p>
+    </section>
+
+    <section class="mobile-pad">
+  <div class="lever-zone">
+    <div class="mini-lever">
+      <label>Scale</label>
+      <input id="scaleLever" type="range" min="0" max="300" step="1" value="100" orient="vertical">
+    </div>
+
+    <div class="mini-lever">
+      <label>Rotate</label>
+      <input id="rotationLever" type="range" min="-180" max="180" step="1" value="0" orient="vertical">
+    </div>
+  </div>
+
+  <div class="joystick-zone">
+    <div id="joystick" class="joystick">
+      <div id="joystickKnob" class="joystick-knob"></div>
+    </div>
+    <p class="joystick-label">Position</p>
+  </div>
+</section>
+
+    <section class="controls">
+
+      <div class="control-card">
+        <div class="control-top">
+          <label>X Position</label>
+          <span id="xValue">0</span>
+        </div>
+<input id="xPos" type="range" min="-1920" max="1920" step="1" value="0">
+      </div>
+
+      <div class="control-card">
+        <div class="control-top">
+          <label>Y Position</label>
+          <span id="yValue">0</span>
+        </div>
+<input id="yPos" type="range" min="-1080" max="1080" step="1" value="0">
+      </div>
+
+      <div class="control-card">
+        <div class="control-top">
+          <label>Scale</label>
+          <span id="scaleValue">1</span>
+        </div>
+<input id="scale" type="range" min="0" max="300" step="1" value="100">      </div>
+
+      <div class="control-card">
+        <div class="control-top">
+          <label>Rotation</label>
+          <span id="rotationValue">0°</span>
+        </div>
+        <input id="rotation" type="range" min="-180" max="180" step="1" value="0">
+      </div>
+
+    </section>
+
+    <section class="button-row">
+      <button id="resetBtn">Reset</button>
+      <button id="applyBtn">Apply Now</button>
+    </section>
+
+    <section class="log-card">
+      <p id="matchText">No clips scanned yet.</p>
+    </section>
+  </main>
+
+<script>
+  const RESOLUME_BASE = "http://192.168.50.152:8080/api/v1";
+
+  const FADE_DURATION = 200;
+  const FADE_STEPS = 20;
+
+  const clipSelect = document.getElementById("clipSelect");
+  const refreshBtn = document.getElementById("refreshBtn");
+  const applyBtn = document.getElementById("applyBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const statusDot = document.getElementById("statusDot");
+  const statusText = document.getElementById("statusText");
+  const matchText = document.getElementById("matchText");
+
+  const DEFAULTS = {
+    "Worship iMag": { x: 53, y: 216, scale: 126.98, rotation: 0 },
+    "Message iMag": { x: 82, y: 294, scale: 137.42, rotation: 0 },
+    "Next Steps iMag": { x: 64, y: 172, scale: 137.42, rotation: 0 },
+    "Kids iMag": { x: 0, y: 220, scale: 120.82, rotation: 0 },
+    "Extra iMag": { x: 82, y: 294, scale: 137.42, rotation: 0 }
+};
+
+function applyDefaultsForGroup(groupName) {
+  const preset = DEFAULTS[groupName];
+  if (!preset) return;
+
+  sliders.x.value = preset.x;
+  sliders.y.value = preset.y;
+  sliders.scale.value = preset.scale;
+  sliders.rotation.value = preset.rotation;
+
+  updateLabels();
+  syncMobileControlsFromSliders();
+
+  console.log("Loaded defaults for:", groupName, preset);
+}
+
+  const sliders = {
+    x: document.getElementById("xPos"),
+    y: document.getElementById("yPos"),
+    scale: document.getElementById("scale"),
+    rotation: document.getElementById("rotation")
+  };
+
+  const labels = {
+    x: document.getElementById("xValue"),
+    y: document.getElementById("yValue"),
+    scale: document.getElementById("scaleValue"),
+    rotation: document.getElementById("rotationValue")
+  };
+
+  let matchedClips = [];
+  let isAnimating = false;
+
+  function setStatus(ok, text) {
+    statusDot.classList.toggle("online", ok);
+    statusDot.classList.toggle("offline", !ok);
+    statusText.textContent = text;
+  }
+
+  function updateLabels() {
+    labels.x.textContent = sliders.x.value;
+    labels.y.textContent = sliders.y.value;
+    labels.scale.textContent = sliders.scale.value;
+    labels.rotation.textContent = `${sliders.rotation.value}°`;
+  }
+
+  async function apiGet(path) {
+    const res = await fetch(`${RESOLUME_BASE}${path}`);
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GET ${path} failed: ${text}`);
+    }
+
+    return await res.json();
+  }
+
+  async function apiPut(path, value) {
+    const res = await fetch(`${RESOLUME_BASE}${path}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: Number(value) })
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`PUT ${path} failed: ${text}`);
+    }
+
+    return true;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function lerp(start, end, t) {
+    return start + (end - start) * t;
+  }
+
+  function smoothstep(t) {
+    return t * t * (3 - 2 * t);
+  }
+
+  function getName(obj) {
+    if (!obj) return "";
+    if (typeof obj.name === "string") return obj.name;
+    if (obj.name?.value) return obj.name.value;
+    return "";
+  }
+
+  function getTransformParams(clip) {
+    const params = clip?.video?.effects?.[0]?.params;
+
+    if (!params) return null;
+
+    return {
+      x: params["Position X"],
+      y: params["Position Y"],
+      scale: params["Scale"],
+      rotation: params["Rotation Z"]
+    };
+  }
+
+  async function updateParam(paramObj, value) {
+    if (!paramObj?.id) {
+      console.error("Missing parameter ID:", paramObj);
+      throw new Error("Parameter has no ID");
+    }
+
+    await apiPut(`/parameter/by-id/${paramObj.id}`, value);
+  }
+
+  async function animateParam(paramObj, fromValue, toValue) {
+    const start = Number(fromValue);
+    const end = Number(toValue);
+
+    if (Number.isNaN(start) || Number.isNaN(end)) return;
+    if (start === end) return;
+
+    for (let i = 1; i <= FADE_STEPS; i++) {
+      const t = i / FADE_STEPS;
+      const eased = smoothstep(t);
+      const value = lerp(start, end, eased);
+
+      await updateParam(paramObj, value);
+      await sleep(FADE_DURATION / FADE_STEPS);
+    }
+  }
+
+  async function scanClips() {
+    try {
+      setStatus(false, "Scanning Resolume...");
+
+      const comp = await apiGet("/composition");
+      matchedClips = [];
+
+      const layers = comp.layers || [];
+
+      for (let layerIndex = 0; layerIndex < layers.length; layerIndex++) {
+        const clips = layers[layerIndex].clips || [];
+
+        for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) {
+          const clip = clips[clipIndex];
+
+          if (getName(clip) === clipSelect.value) {
+            const layerNumber = layerIndex + 1;
+            const clipNumber = clipIndex + 1;
+            const path = `/composition/layers/${layerNumber}/clips/${clipNumber}`;
+
+            matchedClips.push({
+              name: clipSelect.value,
+              layer: layerNumber,
+              clip: clipNumber,
+              path
+            });
+          }
+        }
+      }
+
+      setStatus(true, "Connected to Resolume");
+
+      matchText.textContent = matchedClips.length
+        ? `Found ${matchedClips.length} clip(s). Loaded values from first clip.`
+        : `No clips found`;
+
+      console.log("Matched clips:", matchedClips);
+
+      if (matchedClips.length) {
+  await loadCurrentValuesFromFirstClip();
+} else {
+  applyDefaultsForGroup(clipSelect.value);
+}
+
+    } catch (err) {
+      console.error(err);
+      matchedClips = [];
+      setStatus(false, "Connection failed");
+      matchText.textContent = "Check Resolume Webserver + IP";
+    }
+  }
+
+  async function loadCurrentValuesFromFirstClip() {
+    const firstClip = matchedClips[0];
+    if (!firstClip) return;
+
+    const freshClip = await apiGet(firstClip.path);
+    const params = getTransformParams(freshClip);
+
+    if (!params) {
+      console.warn("No transform params found on first clip");
+      return;
+    }
+
+    sliders.x.value = Number(params.x.value);
+    sliders.y.value = Number(params.y.value);
+    sliders.scale.value = Number(params.scale.value);
+    sliders.rotation.value = Number(params.rotation.value);
+
+    updateLabels();
+    syncMobileControlsFromSliders();
+
+    console.log("Loaded current values from first clip:", {
+      x: params.x.value,
+      y: params.y.value,
+      scale: params.scale.value,
+      rotation: params.rotation.value
+    });
+  }
+
+  async function updateOneClip(match) {
+    const freshClip = await apiGet(match.path);
+    const params = getTransformParams(freshClip);
+
+    if (!params) {
+      throw new Error("No transform params found");
+    }
+
+    await Promise.all([
+      animateParam(params.x, params.x.value, sliders.x.value),
+      animateParam(params.y, params.y.value, sliders.y.value),
+      animateParam(params.scale, params.scale.value, sliders.scale.value),
+      animateParam(params.rotation, params.rotation.value, sliders.rotation.value)
+    ]);
+
+    console.log("✅ Smooth updated clip:", match.name);
+  }
+
+  async function applyValues() {
+    if (isAnimating) return;
+
+    if (!matchedClips.length) {
+      await scanClips();
+    }
+
+    if (!matchedClips.length) return;
+
+    isAnimating = true;
+
+    try {
+      for (const clip of matchedClips) {
+        await updateOneClip(clip);
+      }
+
+      matchText.textContent = `Smooth updated ${matchedClips.length} clip(s)`;
+
+    } catch (err) {
+      console.error(err);
+      matchText.textContent = "Update failed — check console";
+    } finally {
+      isAnimating = false;
+    }
+  }
+
+async function resetValues() {
+  applyDefaultsForGroup(clipSelect.value);
+  await applyValues();
+}
+
+  Object.values(sliders).forEach(slider => {
+slider.addEventListener("input", () => {
+  updateLabels();
+  clearTimeout(slider._timer);
+  slider._timer = setTimeout(() => {
+    applyValues();
+  }, 120);
+});
+
+    slider.addEventListener("change", () => {
+      updateLabels();
+      applyValues();
+    });
+  });
+
+
+  const joystick = document.getElementById("joystick");
+const joystickKnob = document.getElementById("joystickKnob");
+const scaleLever = document.getElementById("scaleLever");
+const rotationLever = document.getElementById("rotationLever");
+
+let joystickActive = false;
+
+function syncMobileControlsFromSliders() {
+  if (scaleLever) scaleLever.value = sliders.scale.value;
+  if (rotationLever) rotationLever.value = sliders.rotation.value;
+}
+
+function moveJoystick(clientX, clientY) {
+  if (!joystick || !joystickKnob) return;
+
+  const rect = joystick.getBoundingClientRect();
+  const radius = rect.width / 2;
+  const centerX = rect.left + radius;
+  const centerY = rect.top + radius;
+
+  let dx = clientX - centerX;
+  let dy = clientY - centerY;
+
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  const maxDistance = radius - 29;
+
+  if (distance > maxDistance) {
+    dx = (dx / distance) * maxDistance;
+    dy = (dy / distance) * maxDistance;
+  }
+
+  joystickKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+
+  const xMin = Number(sliders.x.min);
+  const xMax = Number(sliders.x.max);
+  const yMin = Number(sliders.y.min);
+  const yMax = Number(sliders.y.max);
+
+const SENSITIVITY = 0.35; // lower = slower, smoother
+
+const xNorm = (dx / maxDistance) * SENSITIVITY;
+const yNorm = (dy / maxDistance) * SENSITIVITY;
+
+sliders.x.value = Math.round(xNorm * Math.max(Math.abs(xMin), Math.abs(xMax)));
+sliders.y.value = Math.round(yNorm * Math.max(Math.abs(yMin), Math.abs(yMax)));
+
+  updateLabels();
+
+clearTimeout(joystick._timer);
+joystick._timer = setTimeout(() => {
+  applyValues();
+}, 30);
+}
+
+function centerJoystick() {
+  if (!joystickKnob) return;
+  joystickKnob.style.transform = "translate(-50%, -50%)";
+}
+
+if (joystick) {
+  joystick.addEventListener("pointerdown", e => {
+    joystickActive = true;
+    joystick.setPointerCapture(e.pointerId);
+    moveJoystick(e.clientX, e.clientY);
+  });
+
+  joystick.addEventListener("pointermove", e => {
+    if (!joystickActive) return;
+    moveJoystick(e.clientX, e.clientY);
+  });
+
+  joystick.addEventListener("pointerup", e => {
+    joystickActive = false;
+    centerJoystick();
+    applyValues();
+  });
+
+  joystick.addEventListener("pointercancel", () => {
+    joystickActive = false;
+    centerJoystick();
+  });
+}
+
+if (scaleLever) {
+  scaleLever.addEventListener("input", () => {
+    sliders.scale.value = scaleLever.value;
+    updateLabels();
+  });
+
+  scaleLever.addEventListener("change", () => {
+    sliders.scale.value = scaleLever.value;
+    applyValues();
+  });
+}
+
+if (rotationLever) {
+  rotationLever.addEventListener("input", () => {
+    sliders.rotation.value = rotationLever.value;
+    updateLabels();
+  });
+
+  rotationLever.addEventListener("change", () => {
+    sliders.rotation.value = rotationLever.value;
+    applyValues();
+  });
+}
+
+  clipSelect.addEventListener("change", scanClips);
+  refreshBtn.addEventListener("click", scanClips);
+  applyBtn.addEventListener("click", applyValues);
+  resetBtn.addEventListener("click", resetValues);
+
+  updateLabels();
+  scanClips();
+</script>
+</body>
+</html>
