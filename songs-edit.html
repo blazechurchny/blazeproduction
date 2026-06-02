@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Blaze Song Library Admin</title>
+
+  <link rel="stylesheet" href="pco.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <p class="eyebrow">Blaze Worship Admin</p>
+      <h1>Song Library Admin</h1>
+      <p class="subtext">
+        Force refresh the Blaze song library from Planning Center.<br><br>blaze-song-sync-92741
+      </p>
+    </section>
+
+    <section class="song-card">
+      <h2 class="song-title">Refresh Songs</h2>
+
+      <p class="song-meta">
+        This pulls the latest songs and tags from Planning Center into Firestore.
+        The library also refreshes automatically every 48 hours.
+      </p>
+
+      <input
+        id="syncKeyInput"
+        type="password"
+        placeholder="Enter sync password"
+        autocomplete="off"
+      />
+
+      <button id="syncButton" class="primary-button">
+        Force Refresh Song Library
+      </button>
+
+      <p id="syncStatus" class="song-meta"></p>
+    </section>
+
+    <section class="song-card admin-editor-card">
+  <h2 class="song-title">Typical Worship Leader Keys</h2>
+
+  <p class="song-meta">
+    Choose a song, then add the keys each worship leader usually sings it in.
+  </p>
+
+  <!-- <input
+    id="adminKeyInput"
+    type="password"
+    placeholder="Enter admin sync password"
+    autocomplete="off"
+  /> -->
+
+  <input
+    id="songSearchInput"
+    type="search"
+    placeholder="Search for a song..."
+  />
+
+  <select id="songSelect">
+    <option value="">Loading songs...</option>
+  </select>
+
+  <div id="leaderRows" class="leader-rows"></div>
+
+  <button id="addLeaderRowButton" class="secondary-button">
+    Add Worship Leader Key
+  </button>
+
+  <button id="saveLeaderKeysButton" class="primary-button">
+    Save Worship Leader Keys
+  </button>
+
+  <p id="leaderKeysStatus" class="song-meta"></p>
+</section>
+  </main>
+
+<script type="module" src="songs-edit.js"></script>
+</body>
+</html>

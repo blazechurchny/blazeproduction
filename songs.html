@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Blaze Song Library</title>
+
+  <link rel="stylesheet" href="pco.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <p class="eyebrow">Blaze Worship</p>
+      <h1>Song Library</h1>
+      <p class="subtext">
+        Search songs used by Blaze Church.
+      </p>
+    </section>
+
+<section class="tabs">
+  <button class="tab-button active" data-tab="active">Active Songs</button>
+  <button class="tab-button" data-tab="archived">Archived Songs</button>
+  <button class="tab-button" data-tab="leaderKeys">Typical Worship Leader Keys</button>
+  <button class="tab-button" data-tab="tagGroups">Song Tag Groups</button>
+</section>
+
+<section class="toolbar">
+  <input
+    id="searchInput"
+    type="search"
+    placeholder="Search by title, author, theme, tag, or CCLI..."
+  />
+
+  <select id="sortSelect">
+    <option value="title">Sort by Title</option>
+    <option value="lastScheduled">Sort by Last Scheduled</option>
+    <option value="updated">Sort by Recently Updated</option>
+  </select>
+</section>
+
+    <section class="stats">
+      <span id="songCount">Loading songs...</span>
+    </section>
+
+    <section id="songGrid" class="song-grid"></section>
+
+    <section id="emptyState" class="empty-state hidden">
+      No songs found.
+    </section>
+  </main>
+
+  <script type="module" src="pco.js"></script>
+</body>
+</html>
