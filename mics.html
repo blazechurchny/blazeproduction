@@ -1,526 +1,2543 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
   <title>Mic Assignment</title>
+
+
   <style>
+
     :root {
-      --bg: #06090f;
-      --panel: #0f141c;
-      --text: #f5f7fa;
-      --accent: #8ed8ff;
-      --muted: rgba(255,255,255,0.72);
-      --line: rgba(255,255,255,0.08);
+
+      --bg:
+        #06090f;
+
+      --panel:
+        #0f141c;
+
+      --text:
+        #f5f7fa;
+
+      --accent:
+        #8ed8ff;
+
+      --muted:
+        rgba(255,255,255,0.72);
+
+      --green:
+        #31d17c;
+
+      --yellow:
+        #ffd166;
+
+      --red:
+        #ff5d73;
+
+      --offline:
+        #8b96a3;
+
     }
 
-    * { box-sizing: border-box; }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      color: var(--text);
+    * {
+      box-sizing:
+        border-box;
+    }
+
+
+    html,
+    body {
+
+      min-height:
+        100%;
+
+      margin:
+        0;
+
+      padding:
+        0;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      color:
+        var(--text);
+
       background:
-        radial-gradient(circle at top center, rgba(0,130,255,0.16), transparent 35%),
-        linear-gradient(180deg, #07101a 0%, #04070c 100%);
-      overflow: hidden;
+
+        radial-gradient(
+
+          circle at top center,
+
+          rgba(0,130,255,0.16),
+
+          transparent 35%
+
+        ),
+
+        linear-gradient(
+
+          180deg,
+
+          #07101a 0%,
+
+          #04070c 100%
+
+        );
+
     }
+
 
     body {
-      display: flex;
-      flex-direction: column;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
     }
 
-    .top-section {
-      flex-shrink: 0;
-      padding: 18px 24px 0;
+
+    /* ========================================
+       MAIN LAYOUT
+    ======================================== */
+
+
+    .main-layout {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0, 1fr) 340px;
+
+      gap:
+        12px;
+
+      padding:
+        12px 24px 24px;
+
+      min-height:
+        100vh;
+
     }
 
-    .header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 24px;
-      padding-bottom: 10px;
+
+    .left-side {
+
+      min-width:
+        0;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      gap:
+        12px;
+
     }
 
-    .header-left {
-      min-width: 0;
-    }
 
-    .header-title {
-      font-size: clamp(1.8rem, 3.5vw, 3rem);
-      margin: 0;
-      line-height: 1;
-      font-weight: 900;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
+    /* ========================================
+       MIC BOARD
+    ======================================== */
 
-    .tagline {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 8px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .header-right {
-      flex-shrink: 0;
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      align-items: flex-end;
-    }
-
-    #lastUpdated {
-      color: #b7c3cf;
-      font-size: 0.85rem;
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    #scheduledEngineer {
-      color: white;
-      font-weight: 800;
-      font-size: 1.05rem;
-      white-space: nowrap;
-    }
-
-    .toggle-wrapper {
-      margin-top: 2px;
-    }
-
-    #toggleIframeBtn {
-      background: rgba(255,255,255,0.07);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      padding: 8px 14px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 700;
-      transition: background-color 0.2s, border-color 0.2s;
-    }
-
-    #toggleIframeBtn:hover {
-      background: rgba(255,255,255,0.12);
-      border-color: rgba(255,255,255,0.2);
-    }
-
-    .divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
-      margin: 14px 0 12px;
-    }
-
-    .iframe-wrapper {
-      display: none;
-      position: relative;
-      height: 143px;
-      margin: 0 0 12px;
-      overflow: hidden;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(0,0,0,0.28);
-    }
-
-    .companion-iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 260px;
-      transform: scale(0.55);
-      transform-origin: top center;
-      border: none;
-    }
 
     .board-shell {
-      flex: 1;
-      min-height: 0;
-      margin: 0 24px 24px;
+
+      flex:
+        1;
+
+      min-height:
+        460px;
+
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(255,255,255,0.03),
+
+          rgba(255,255,255,0.01)
+
+        ),
+
         rgba(0,0,0,0.4);
-      border: 1px solid rgba(255,255,255,0.06);
+
+      border:
+        1px solid rgba(255,255,255,0.06);
+
+      border-radius:
+        12px;
+
       box-shadow:
+
         inset 0 0 0 1px rgba(255,255,255,0.02),
+
         0 20px 60px rgba(0,0,0,0.45);
-      padding: 12px;
-      overflow: hidden;
-      display: flex;
+
+      padding:
+        12px;
+
+      overflow-x:
+        auto;
+
+      display:
+        flex;
+
     }
+
 
     .mic-container {
-      flex: 1;
-      min-height: 0;
-      display: grid;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(120px, 1fr);
-      gap: 2px;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.03);
-      overflow: hidden;
+
+      flex:
+        1;
+
+      min-height:
+        0;
+
+      display:
+        grid;
+
+      grid-auto-flow:
+        column;
+
+      grid-auto-columns:
+        minmax(135px, 1fr);
+
+      gap:
+        2px;
+
+      width:
+        100%;
+
+      min-width:
+        max-content;
+
+      background:
+        rgba(255,255,255,0.03);
+
     }
+
 
     .mic-card {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      border-left: 1px solid rgba(255,255,255,0.04);
-      border-right: 1px solid rgba(0,0,0,0.45);
+
+      position:
+        relative;
+
+      width:
+        100%;
+
+      min-width:
+        135px;
+
+      height:
+        100%;
+
+      min-height:
+        430px;
+
+      overflow:
+        hidden;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      justify-content:
+        space-between;
+
+      border-left:
+        1px solid rgba(255,255,255,0.04);
+
+      border-right:
+        1px solid rgba(0,0,0,0.45);
+
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.12)),
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(255,255,255,0.03),
+
+          rgba(0,0,0,0.12)
+
+        ),
+
         var(--panel);
+
     }
+
 
     .mic-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
+
+      content:
+        "";
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      z-index:
+        1;
+
+      pointer-events:
+        none;
+
       background:
-        linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.06) 22%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.6) 100%);
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(0,0,0,0.15) 0%,
+
+          rgba(0,0,0,0.06) 22%,
+
+          rgba(0,0,0,0.20) 64%,
+
+          rgba(0,0,0,0.74) 100%
+
+        );
+
     }
+
 
     .mic-card.has-photo {
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
+
+      background-size:
+        cover;
+
+      background-position:
+        center;
+
+      background-repeat:
+        no-repeat;
+
     }
+
 
     .mic-card.no-photo {
+
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
-        linear-gradient(180deg, #49525f 0%, #313947 100%);
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(255,255,255,0.03),
+
+          rgba(255,255,255,0.01)
+
+        ),
+
+        linear-gradient(
+
+          180deg,
+
+          #49525f 0%,
+
+          #313947 100%
+
+        );
+
     }
+
 
     .mic-card.backup {
+
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
-        linear-gradient(180deg, #8fdcff 0%, #71c9f2 100%);
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(255,255,255,0.05),
+
+          rgba(255,255,255,0.02)
+
+        ),
+
+        linear-gradient(
+
+          180deg,
+
+          #8fdcff 0%,
+
+          #71c9f2 100%
+
+        );
+
     }
+
 
     .mic-card.backup::before {
+
       background:
-        linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.04) 35%, rgba(0,0,0,0.22) 100%);
+
+        linear-gradient(
+
+          180deg,
+
+          rgba(0,0,0,0.10) 0%,
+
+          rgba(0,0,0,0.04) 35%,
+
+          rgba(0,0,0,0.38) 100%
+
+        );
+
     }
+
 
     .mic-inner {
-      position: relative;
-      z-index: 2;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+
+      position:
+        relative;
+
+      z-index:
+        2;
+
+      height:
+        100%;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
     }
+
 
     .mic-top {
-      text-align: center;
-      padding: 12px 8px 0;
+
+      text-align:
+        center;
+
+      padding:
+        12px 8px 0;
+
     }
+
 
     .mic-number {
-      margin: 0;
-      font-size: clamp(1rem, 1.25vw, 1.5rem);
-      font-style: italic;
-      font-weight: 900;
-      color: rgba(255,255,255,0.98);
-      letter-spacing: 0.05em;
+
+      margin:
+        0;
+
+      font-size:
+        clamp(1rem, 1.25vw, 1.5rem);
+
+      font-style:
+        italic;
+
+      font-weight:
+        900;
+
+      color:
+        rgba(255,255,255,0.98);
+
+      letter-spacing:
+        0.05em;
+
       text-shadow:
+
         0 2px 8px rgba(0,0,0,0.45),
+
         0 4px 18px rgba(0,0,0,0.55);
+
     }
+
 
     .mic-middle {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 16px 10px 24px;
+
+      flex:
+        1;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      text-align:
+        center;
+
+      padding:
+        16px 10px 12px;
+
     }
+
 
     .name-stack {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+
+      width:
+        100%;
+
     }
+
 
     .mic-name {
-      margin: 0;
-      font-size: clamp(1.35rem, 2.1vw, 2.45rem);
-      font-weight: 900;
-      line-height: 1.04;
-      color: #fff;
+
+      margin:
+        0;
+
+      font-size:
+        clamp(1.35rem, 2.1vw, 2.45rem);
+
+      font-weight:
+        900;
+
+      line-height:
+        1.04;
+
+      color:
+        #fff;
+
       text-shadow:
+
         0 4px 12px rgba(0,0,0,0.5),
+
         0 8px 28px rgba(0,0,0,0.65);
-      overflow-wrap: break-word;
+
+      overflow-wrap:
+        break-word;
+
     }
+
 
     .meta-stack {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      align-items:
+        center;
+
+      gap:
+        6px;
+
+      margin-top:
+        4px;
+
     }
+
 
     .meta-line {
-      margin: 0;
-      font-size: clamp(0.95rem, 1.2vw, 1.25rem);
-      font-weight: 800;
-      text-align: center;
-      line-height: 1.2;
-      color: #fff;
+
+      margin:
+        0;
+
+      font-size:
+        clamp(0.9rem, 1.1vw, 1.18rem);
+
+      font-weight:
+        800;
+
+      text-align:
+        center;
+
+      line-height:
+        1.2;
+
+      color:
+        #fff;
+
       text-shadow:
+
         0 2px 6px rgba(0,0,0,0.5),
+
         0 4px 14px rgba(0,0,0,0.6);
+
     }
+
 
     .meta-label {
-      color: var(--accent);
-      margin-right: 6px;
-      font-weight: 900;
+
+      color:
+        var(--accent);
+
+      margin-right:
+        6px;
+
+      font-weight:
+        900;
+
     }
 
-    .mic-card.backup .mic-number,
-    .mic-card.backup .mic-name,
-    .mic-card.backup .meta-line,
-    .mic-card.backup .meta-label {
-      color: #fff;
+
+    /* ========================================
+       BATTERY STATUS
+    ======================================== */
+
+
+    .battery-strip {
+
+      margin:
+        0 8px 8px;
+
+      padding:
+        8px 9px;
+
+      border-radius:
+        9px;
+
+      background:
+        rgba(0,0,0,0.55);
+
+      border:
+        1px solid rgba(255,255,255,0.10);
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        6px;
+
+      font-size:
+        0.73rem;
+
+      font-weight:
+        900;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.035em;
+
+      backdrop-filter:
+        blur(5px);
+
     }
 
-    .empty-name {
-      opacity: 0.58;
+
+    .battery-left {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        7px;
+
+      min-width:
+        0;
+
     }
 
-    @media (max-width: 900px) {
-      html, body {
-        overflow: auto;
-      }
 
-      .top-section {
-        padding: 16px 16px 0;
-      }
+    .battery-icon {
 
-      .header-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      width:
+        25px;
 
-      .header-right {
-        text-align: left;
-        align-items: flex-start;
-      }
+      height:
+        12px;
 
-      .board-shell {
-        margin: 0 16px 16px;
-        min-height: 60vh;
-      }
+      border:
+        2px solid currentColor;
 
-      .mic-container {
-        grid-auto-columns: minmax(95px, 1fr);
-      }
+      border-radius:
+        3px;
 
-      .mic-name {
-        font-size: clamp(1.05rem, 3.2vw, 1.6rem);
-      }
+      padding:
+        1px;
 
-      .meta-line {
-        font-size: clamp(0.8rem, 2.2vw, 1rem);
-      }
+      position:
+        relative;
+
+      flex-shrink:
+        0;
+
     }
 
-    @media (max-width: 640px) {
-      .header-title {
-        font-size: 1.5rem;
-      }
 
-      .tagline {
-        font-size: 0.8rem;
-      }
+    .battery-icon::after {
 
-      .board-shell {
-        min-height: 55vh;
-      }
+      content:
+        "";
 
-      .mic-container {
-        grid-auto-columns: minmax(84px, 1fr);
-      }
+      position:
+        absolute;
+
+      width:
+        3px;
+
+      height:
+        6px;
+
+      right:
+        -5px;
+
+      top:
+        1px;
+
+      border-radius:
+        0 2px 2px 0;
+
+      background:
+        currentColor;
+
     }
+
+
+    .battery-fill {
+
+      height:
+        100%;
+
+      border-radius:
+        1px;
+
+      background:
+        currentColor;
+
+    }
+
+
+    .battery-status.live.good {
+
+      color:
+        var(--green);
+
+    }
+
+
+    .battery-status.live.warn {
+
+      color:
+        var(--yellow);
+
+    }
+
+
+    .battery-status.live.low {
+
+      color:
+        var(--red);
+
+    }
+
+
+    .battery-status.offline {
+
+      color:
+        var(--offline);
+
+    }
+
+
+    .battery-status.unknown {
+
+      color:
+        var(--offline);
+
+      opacity:
+        0.8;
+
+    }
+
+
+    /* ========================================
+       UTILITY WIRELESS
+    ======================================== */
+
+
+    .utility-wrap {
+
+      padding:
+        12px;
+
+      border:
+        1px solid rgba(255,255,255,0.07);
+
+      background:
+        rgba(0,0,0,0.31);
+
+      border-radius:
+        12px;
+
+    }
+
+
+    .utility-heading {
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      margin-bottom:
+        9px;
+
+    }
+
+
+    .utility-heading h2 {
+
+      margin:
+        0;
+
+      font-size:
+        0.9rem;
+
+      letter-spacing:
+        0.08em;
+
+      text-transform:
+        uppercase;
+
+    }
+
+
+    .utility-grid {
+
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(4, minmax(145px, 1fr));
+
+      gap:
+        8px;
+
+    }
+
+
+    .utility-card {
+
+      border:
+        1px solid rgba(255,255,255,0.08);
+
+      background:
+        rgba(255,255,255,0.035);
+
+      border-radius:
+        9px;
+
+      padding:
+        10px;
+
+    }
+
+
+    .utility-name {
+
+      font-weight:
+        900;
+
+      font-size:
+        0.93rem;
+
+    }
+
+
+    .utility-type {
+
+      margin-top:
+        2px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        0.73rem;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.07em;
+
+    }
+
+
+    .utility-card .battery-strip {
+
+      margin:
+        8px 0 0;
+
+    }
+
+
+    /* ========================================
+       ORDER OF SERVICE
+    ======================================== */
+
+
+    .order-panel {
+
+      background:
+        rgba(0,0,0,0.38);
+
+      border:
+        1px solid rgba(255,255,255,0.08);
+
+      border-radius:
+        14px;
+
+      padding:
+        16px;
+
+      overflow-y:
+        auto;
+
+      max-height:
+        calc(100vh - 24px);
+
+    }
+
+
+    .order-header {
+
+      padding-bottom:
+        11px;
+
+      margin-bottom:
+        8px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,0.10);
+
+    }
+
+
+    .order-label {
+
+      color:
+        var(--accent);
+
+      font-size:
+        0.83rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.12em;
+
+      text-transform:
+        uppercase;
+
+    }
+
+
+    .order-list {
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      gap:
+        5px;
+
+    }
+
+
+    .order-section-header {
+
+      margin-top:
+        14px;
+
+      margin-bottom:
+        3px;
+
+      padding:
+        8px 4px 6px;
+
+      color:
+        var(--accent);
+
+      font-size:
+        0.76rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.11em;
+
+      text-transform:
+        uppercase;
+
+      border-bottom:
+        1px solid rgba(142,216,255,0.25);
+
+    }
+
+
+    .order-section-header:first-child {
+
+      margin-top:
+        0;
+
+    }
+
+
+    .order-item {
+
+      display:
+        flex;
+
+      align-items:
+        flex-start;
+
+      gap:
+        9px;
+
+      padding:
+        9px 9px;
+
+      border-radius:
+        8px;
+
+      background:
+        rgba(255,255,255,0.035);
+
+      border:
+        1px solid rgba(255,255,255,0.055);
+
+      font-size:
+        0.84rem;
+
+    }
+
+
+    .order-item.song {
+
+      background:
+        rgba(142,216,255,0.09);
+
+      border-color:
+        rgba(142,216,255,0.16);
+
+    }
+
+
+    .order-number {
+
+      width:
+        21px;
+
+      flex-shrink:
+        0;
+
+      color:
+        rgba(255,255,255,0.40);
+
+      font-size:
+        0.70rem;
+
+      font-weight:
+        800;
+
+      padding-top:
+        2px;
+
+    }
+
+
+    .order-item-content {
+
+      flex:
+        1;
+
+      min-width:
+        0;
+
+    }
+
+
+    .order-title-text {
+
+      color:
+        #fff;
+
+      font-weight:
+        850;
+
+      line-height:
+        1.2;
+
+    }
+
+
+    .order-item.song .order-title-text {
+
+      color:
+        #dff5ff;
+
+    }
+
+
+    .order-meta {
+
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      gap:
+        4px 12px;
+
+      margin-top:
+        5px;
+
+      color:
+        var(--muted);
+
+      font-size:
+        0.69rem;
+
+      font-weight:
+        700;
+
+    }
+
+
+    .order-item.song .order-meta {
+
+      color:
+        rgba(223,245,255,0.74);
+
+    }
+
+
+    .order-key {
+
+      color:
+        var(--accent);
+
+      font-weight:
+        900;
+
+    }
+
+
+    .planning-empty {
+
+      color:
+        var(--muted);
+
+      font-size:
+        0.86rem;
+
+      padding:
+        8px 3px;
+
+    }
+
+
+    /* ========================================
+       RESPONSIVE
+    ======================================== */
+
+
+    @media (
+      max-width:
+        900px
+    ) {
+
+      .main-layout {
+
+        grid-template-columns:
+          1fr;
+
+        padding:
+          12px 16px;
+
+      }
+
+
+      .order-panel {
+
+        max-height:
+          none;
+
+      }
+
+
+      .utility-grid {
+
+        grid-template-columns:
+          repeat(2, minmax(140px, 1fr));
+
+      }
+
+    }
+
+
+    @media (
+      max-width:
+        640px
+    ) {
+
+      .utility-grid {
+
+        grid-template-columns:
+          1fr 1fr;
+
+      }
+
+    }
+
   </style>
+
 </head>
+
+
 <body>
-  <div class="top-section">
-    <div class="header-row">
-      <div class="header-left">
-        <h1 class="header-title">Microphone Assignments for April 6th</h1>
-        <div class="tagline">Remember to check your microphone and pack batteries</div>
+
+
+  <div class="main-layout">
+
+
+    <!-- LEFT SIDE -->
+
+    <div class="left-side">
+
+
+      <!-- MIC ASSIGNMENTS -->
+
+      <div class="board-shell">
+
+        <div
+          class="mic-container"
+          id="micBoard"
+        ></div>
+
       </div>
 
-      <div class="header-right">
-        <span id="lastUpdated">Last Updated: --:--</span>
-        <span id="scheduledEngineer">Scheduled Audio Engineer: --</span>
+
+      <!-- UTILITY WIRELESS -->
+
+      <div class="utility-wrap">
+
+        <div class="utility-heading">
+
+          <h2>
+            Utility Wireless
+          </h2>
+
+        </div>
+
+
+        <div
+          class="utility-grid"
+          id="utilityGrid"
+        ></div>
+
       </div>
+
+
     </div>
 
 
-    <div class="divider"></div>
+    <!-- ORDER OF SERVICE -->
+
+    <aside class="order-panel">
+
+
+      <div class="order-header">
+
+        <div class="order-label">
+          Order of Service
+        </div>
+
+      </div>
+
+
+      <div
+        class="order-list"
+        id="orderOfService"
+      ></div>
+
+
+    </aside>
+
+
   </div>
 
-  <div class="board-shell">
-    <div class="mic-container" id="micBoard"></div>
-  </div>
 
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js';
-    import { getFirestore, getDoc, getDocs, collection, onSnapshot, doc } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js';
+
+
+    import {
+
+      initializeApp
+
+    }
+    from
+    "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+
+
+    import {
+
+      getFirestore,
+      getDocs,
+      collection,
+      onSnapshot,
+      doc
+
+    }
+    from
+    "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+
+    /* ========================================
+       FIREBASE
+    ======================================== */
+
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
-      authDomain: "micassignments.firebaseapp.com",
-      projectId: "micassignments",
-      storageBucket: "micassignments.appspot.com",
-      messagingSenderId: "1010248680745",
-      appId: "1:1010248680745:web:b82c69767cc857269c2338"
+
+      apiKey:
+        "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
+
+      authDomain:
+        "micassignments.firebaseapp.com",
+
+      projectId:
+        "micassignments",
+
+      storageBucket:
+        "micassignments.appspot.com",
+
+      messagingSenderId:
+        "1010248680745",
+
+      appId:
+        "1:1010248680745:web:b82c69767cc857269c2338"
+
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
-    const titleEl = document.querySelector(".header-title");
-    const taglineEl = document.querySelector(".tagline");
-    const engineerEl = document.getElementById("scheduledEngineer");
-    const micBoard = document.getElementById("micBoard");
-    const lastUpdated = document.getElementById("lastUpdated");
+    const app =
 
-    function escapeHtml(str = '') {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      initializeApp(
+        firebaseConfig
+      );
+
+
+    const db =
+
+      getFirestore(
+        app
+      );
+
+
+    /* ========================================
+       DOM
+    ======================================== */
+
+
+    const micBoard =
+
+      document.getElementById(
+        "micBoard"
+      );
+
+
+    const utilityGrid =
+
+      document.getElementById(
+        "utilityGrid"
+      );
+
+
+    const orderEl =
+
+      document.getElementById(
+        "orderOfService"
+      );
+
+
+    /* ========================================
+       RECEIVER IDS
+    ======================================== */
+
+
+    const docOrder = [
+
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine"
+
+    ];
+
+
+    const utilityOrder = [
+
+      "utility1",
+      "utility2",
+      "utility3",
+      "utility4"
+
+    ];
+
+
+    let cachedPhotos =
+      {};
+
+
+    let micData =
+      {};
+
+
+    let wirelessStatus =
+      {};
+
+
+    /* ========================================
+       HELPERS
+    ======================================== */
+
+
+    function escapeHtml(
+      str = ""
+    ) {
+
+      return String(
+        str
+      )
+
+        .replace(
+          /&/g,
+          "&amp;"
+        )
+
+        .replace(
+          /</g,
+          "&lt;"
+        )
+
+        .replace(
+          />/g,
+          "&gt;"
+        )
+
+        .replace(
+          /"/g,
+          "&quot;"
+        )
+
+        .replace(
+          /'/g,
+          "&#039;"
+        );
+
     }
 
-    onSnapshot(doc(db, "uiSettings", "main"), (docSnap) => {
-      const data = docSnap.data();
-      if (data) {
-        if (data.title) titleEl.textContent = data.title;
-        if (data.tagline) taglineEl.textContent = ` ${data.tagline}`;
-        if (data.engineer) engineerEl.textContent = `Scheduled Audio Engineer: ${data.engineer}`;
+
+    function niceTime(
+      value
+    ) {
+
+      if (
+        !value
+      ) {
+
+        return "";
+
       }
-    });
 
-    const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-    let cachedPhotos = {};
 
-    async function loadImages() {
-      const snapshot = await getDocs(collection(db, "images"));
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        cachedPhotos[data.name] = data.photoURL;
-      });
+      const d =
+
+        value?.toDate
+
+          ? value.toDate()
+
+          : new Date(
+              value
+            );
+
+
+      if (
+        Number.isNaN(
+          d.getTime()
+        )
+      ) {
+
+        return "";
+
+      }
+
+
+      return d.toLocaleTimeString(
+
+        [],
+
+        {
+
+          hour:
+            "numeric",
+
+          minute:
+            "2-digit"
+
+        }
+
+      );
+
     }
 
-    loadImages().then(() => {
-      docOrder.forEach(docId => {
-        const micRef = doc(db, "micAssignments", docId);
-        onSnapshot(micRef, (docSnap) => {
-          const data = docSnap.data();
-          const existingCard = document.getElementById(`card-${docId}`);
-          if (existingCard) existingCard.remove();
 
-          if (!data || data.name === "No One") return;
+    /* ========================================
+       BATTERY
+    ======================================== */
 
-          const micCard = document.createElement("div");
-          const photoUrl = cachedPhotos[data.name] || '';
-          const hasPhoto = !!photoUrl;
 
-          const lowerName = (data.name || '').toLowerCase();
-          const lowerPosition = (data.position || '').toLowerCase();
-          const isBackup =
-            lowerName.includes('backup') ||
-            lowerName.includes('announcement') ||
-            lowerPosition.includes('backup') ||
-            lowerPosition.includes('announcement');
+    function batteryClass(
+      status
+    ) {
 
-          micCard.classList.add("mic-card");
-          if (hasPhoto) micCard.classList.add("has-photo");
-          else micCard.classList.add("no-photo");
-          if (isBackup) micCard.classList.add("backup");
-          micCard.id = `card-${docId}`;
+      if (
+        !status ||
+        status.bars === null ||
+        status.bars === undefined
+      ) {
 
-          if (hasPhoto) {
-            micCard.style.backgroundImage = `url("${photoUrl}")`;
-          }
+        return "unknown";
 
-          micCard.innerHTML = `
-            <div class="mic-inner">
-              <div class="mic-top">
-                <p class="mic-number">${escapeHtml(data.micNumber ? `${data.micNumber}` : 'Mic')}</p>
+      }
+
+
+      if (
+        !status.online
+      ) {
+
+        return "offline";
+
+      }
+
+
+      if (
+        Number(status.bars) <= 1
+      ) {
+
+        return "live low";
+
+      }
+
+
+      if (
+        Number(status.bars) <= 3
+      ) {
+
+        return "live warn";
+
+      }
+
+
+      return "live good";
+
+    }
+
+
+    function batteryHtml(
+      status
+    ) {
+
+
+      if (
+        !status ||
+        status.bars === null ||
+        status.bars === undefined
+      ) {
+
+        return `
+
+          <div
+            class="battery-strip battery-status unknown"
+          >
+
+            <div class="battery-left">
+
+              <div class="battery-icon">
+
+                <div
+                  class="battery-fill"
+                  style="width:0%"
+                ></div>
+
               </div>
 
-              <div class="mic-middle">
-                <div class="name-stack">
-                  <h3 class="mic-name ${data.name ? '' : 'empty-name'}">${escapeHtml(data.name || 'Unassigned')}</h3>
 
-                  ${(data.inEarPack || data.position) ? `
-                    <div class="meta-stack">
-                      ${data.inEarPack ? `<p class="meta-line"><span class="meta-label">In Ear Pack:</span>${escapeHtml(data.inEarPack)}</p>` : ''}
-                      ${data.position ? `<p class="meta-line"><span class="meta-label">Position:</span>${escapeHtml(data.position)}</p>` : ''}
-                    </div>
-                  ` : ''}
-                </div>
-              </div>
+              <span>
+                Battery --
+              </span>
+
             </div>
+
+
+            <span>
+              Unknown
+            </span>
+
+          </div>
+
+        `;
+
+      }
+
+
+      const bars =
+
+        Math.max(
+
+          0,
+
+          Math.min(
+
+            5,
+
+            Number(
+              status.bars
+            )
+
+          )
+
+        );
+
+
+      const pct =
+        bars * 20;
+
+
+      const cls =
+
+        batteryClass(
+          status
+        );
+
+
+      const last =
+
+        niceTime(
+
+          status.lastSeen
+
+          ||
+
+          status.updatedAt
+
+        );
+
+
+      /* LIVE TRANSMITTER */
+
+
+      if (
+        status.online
+      ) {
+
+
+        const label =
+
+          status.chargePercent !== null
+
+          &&
+
+          status.chargePercent !== undefined
+
+            ? `${status.chargePercent}%`
+
+            : `${bars}/5`;
+
+
+        return `
+
+          <div
+            class="battery-strip battery-status ${cls}"
+          >
+
+            <div class="battery-left">
+
+              <div class="battery-icon">
+
+                <div
+                  class="battery-fill"
+                  style="width:${pct}%"
+                ></div>
+
+              </div>
+
+
+              <span>
+
+                ${escapeHtml(
+                  label
+                )}
+
+              </span>
+
+            </div>
+
+
+            <span>
+              Live
+            </span>
+
+          </div>
+
+        `;
+
+      }
+
+
+      /* TRANSMITTER OFF / LAST KNOWN */
+
+
+      return `
+
+        <div
+          class="battery-strip battery-status ${cls}"
+        >
+
+          <div class="battery-left">
+
+            <div class="battery-icon">
+
+              <div
+                class="battery-fill"
+                style="width:${pct}%"
+              ></div>
+
+            </div>
+
+
+            <span>
+              Last ${bars}/5
+            </span>
+
+          </div>
+
+
+          <span>
+
+            ${
+
+              last
+
+                ? `Off • ${escapeHtml(last)}`
+
+                : "Offline"
+
+            }
+
+          </span>
+
+        </div>
+
+      `;
+
+    }
+
+
+    /* ========================================
+       PLANNING CENTER
+    ======================================== */
+
+
+    onSnapshot(
+
+      doc(
+
+        db,
+
+        "planningCenter",
+
+        "current"
+
+      ),
+
+      docSnap => {
+
+
+        const data =
+          docSnap.data();
+
+
+        if (
+          !data
+        ) {
+
+          orderEl.innerHTML = `
+
+            <div class="planning-empty">
+              No service order loaded.
+            </div>
+
           `;
 
-          micBoard.appendChild(micCard);
+          return;
 
-          const now = new Date();
-          const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          lastUpdated.textContent = `Last Updated: ${timeString}`;
-        });
-      });
-    });
+        }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      const toggleBtn = document.getElementById("toggleIframeBtn");
-      const wrapper = document.getElementById("iframeWrapper");
 
-      const savedState = localStorage.getItem("showBatteryLevels");
-      if (savedState === "true") {
-        wrapper.style.display = "block";
-        toggleBtn.textContent = "Hide Battery Levels";
+        const order =
+
+          Array.isArray(
+            data.orderOfService
+          )
+
+            ? data.orderOfService
+
+            : [];
+
+
+        if (
+          !order.length
+        ) {
+
+          orderEl.innerHTML = `
+
+            <div class="planning-empty">
+              No service order loaded.
+            </div>
+
+          `;
+
+          return;
+
+        }
+
+
+        let visibleItemNumber =
+          0;
+
+
+        orderEl.innerHTML =
+
+          order
+
+            .map(
+
+              item => {
+
+
+                /* ==============================
+                   HEADER
+                ============================== */
+
+
+                if (
+                  item.isHeader
+                ) {
+
+                  return `
+
+                    <div class="order-section-header">
+
+                      ${escapeHtml(
+                        item.title ||
+                        ""
+                      )}
+
+                    </div>
+
+                  `;
+
+                }
+
+
+                visibleItemNumber++;
+
+
+                /* ==============================
+                   ITEM META
+                ============================== */
+
+
+                const meta =
+                  [];
+
+
+                if (
+                  item.isSong &&
+                  item.key
+                ) {
+
+                  meta.push(`
+
+                    <span class="order-key">
+
+                      Key:
+                      ${escapeHtml(
+                        item.key
+                      )}
+
+                    </span>
+
+                  `);
+
+                }
+
+
+                if (
+                  Array.isArray(
+                    item.leaders
+                  )
+
+                  &&
+
+                  item.leaders.length
+                ) {
+
+                  meta.push(`
+
+                    <span>
+
+                      Leader:
+                      ${escapeHtml(
+                        item.leaders.join(", ")
+                      )}
+
+                    </span>
+
+                  `);
+
+                }
+
+
+                return `
+
+                  <div
+                    class="order-item ${item.isSong ? "song" : ""}"
+                  >
+
+                    <div class="order-number">
+
+                      ${visibleItemNumber}
+
+                    </div>
+
+
+                    <div class="order-item-content">
+
+
+                      <div class="order-title-text">
+
+                        ${escapeHtml(
+                          item.title ||
+                          ""
+                        )}
+
+                      </div>
+
+
+                      ${
+
+                        meta.length
+
+                          ? `
+
+                            <div class="order-meta">
+
+                              ${meta.join("")}
+
+                            </div>
+
+                          `
+
+                          : ""
+
+                      }
+
+
+                    </div>
+
+
+                  </div>
+
+                `;
+
+              }
+
+            )
+
+            .join("");
+
       }
 
-      toggleBtn.addEventListener("click", () => {
-        const showing = wrapper.style.display === "block";
-        wrapper.style.display = showing ? "none" : "block";
-        toggleBtn.textContent = showing ? "Show Battery Levels" : "Hide Battery Levels";
-        localStorage.setItem("showBatteryLevels", !showing);
-      });
-    });
+    );
+
+
+    /* ========================================
+       PHOTOS
+    ======================================== */
+
+
+    async function loadImages() {
+
+
+      const snapshot =
+
+        await getDocs(
+
+          collection(
+
+            db,
+
+            "images"
+
+          )
+
+        );
+
+
+      snapshot.forEach(
+
+        docSnap => {
+
+
+          const data =
+            docSnap.data();
+
+
+          if (
+            data.name
+          ) {
+
+            cachedPhotos[
+              data.name
+            ] =
+              data.photoURL ||
+              "";
+
+          }
+
+        }
+
+      );
+
+    }
+
+
+    /* ========================================
+       MIC BOARD
+    ======================================== */
+
+
+    function renderMicBoard() {
+
+
+      micBoard.innerHTML =
+        "";
+
+
+      docOrder.forEach(
+
+        docId => {
+
+
+          const data =
+            micData[docId];
+
+
+          if (
+            !data ||
+            data.name === "No One"
+          ) {
+
+            return;
+
+          }
+
+
+          const micCard =
+
+            document.createElement(
+              "div"
+            );
+
+
+          const photoUrl =
+
+            cachedPhotos[
+              data.name
+            ]
+
+            ||
+
+            "";
+
+
+          const hasPhoto =
+            !!photoUrl;
+
+
+          const lowerName =
+
+            String(
+              data.name ||
+              ""
+            )
+            .toLowerCase();
+
+
+          const lowerPosition =
+
+            String(
+              data.position ||
+              ""
+            )
+            .toLowerCase();
+
+
+          const isBackup =
+
+            lowerName.includes(
+              "backup"
+            )
+
+            ||
+
+            lowerName.includes(
+              "announcement"
+            )
+
+            ||
+
+            lowerPosition.includes(
+              "backup"
+            )
+
+            ||
+
+            lowerPosition.includes(
+              "announcement"
+            );
+
+
+          micCard.classList.add(
+
+            "mic-card",
+
+            hasPhoto
+
+              ? "has-photo"
+
+              : "no-photo"
+
+          );
+
+
+          if (
+            isBackup
+          ) {
+
+            micCard.classList.add(
+              "backup"
+            );
+
+          }
+
+
+          if (
+            hasPhoto
+          ) {
+
+            micCard.style.backgroundImage =
+
+              `url("${photoUrl}")`;
+
+          }
+
+
+          micCard.innerHTML = `
+
+            <div class="mic-inner">
+
+
+              <div class="mic-top">
+
+                <p class="mic-number">
+
+                  ${escapeHtml(
+
+                    data.micNumber
+
+                      ? data.micNumber
+
+                      : "Mic"
+
+                  )}
+
+                </p>
+
+              </div>
+
+
+              <div class="mic-middle">
+
+                <div class="name-stack">
+
+
+                  <h3 class="mic-name">
+
+                    ${escapeHtml(
+
+                      data.name ||
+                      "Unassigned"
+
+                    )}
+
+                  </h3>
+
+
+                  ${
+
+                    data.inEarPack ||
+                    data.position
+
+                      ? `
+
+                        <div class="meta-stack">
+
+
+                          ${
+
+                            data.inEarPack
+
+                              ? `
+
+                                <p class="meta-line">
+
+                                  <span class="meta-label">
+                                    In Ear:
+                                  </span>
+
+                                  ${escapeHtml(
+                                    data.inEarPack
+                                  )}
+
+                                </p>
+
+                              `
+
+                              : ""
+
+                          }
+
+
+                          ${
+
+                            data.position
+
+                              ? `
+
+                                <p class="meta-line">
+
+                                  <span class="meta-label">
+                                    Position:
+                                  </span>
+
+                                  ${escapeHtml(
+                                    data.position
+                                  )}
+
+                                </p>
+
+                              `
+
+                              : ""
+
+                          }
+
+
+                        </div>
+
+                      `
+
+                      : ""
+
+                  }
+
+
+                </div>
+
+              </div>
+
+
+              ${batteryHtml(
+                wirelessStatus[docId]
+              )}
+
+
+            </div>
+
+          `;
+
+
+          micBoard.appendChild(
+            micCard
+          );
+
+        }
+
+      );
+
+    }
+
+
+    /* ========================================
+       UTILITY RECEIVERS
+    ======================================== */
+
+
+    function renderUtility() {
+
+
+      utilityGrid.innerHTML =
+        "";
+
+
+      utilityOrder.forEach(
+
+        id => {
+
+
+          const cfg =
+
+            wirelessStatus[id]
+
+            ||
+
+            {};
+
+
+          const card =
+
+            document.createElement(
+              "div"
+            );
+
+
+          card.className =
+            "utility-card";
+
+
+          card.innerHTML = `
+
+            <div class="utility-name">
+
+              ${escapeHtml(
+
+                cfg.label
+
+                ||
+
+                id.replace(
+                  "utility",
+                  "Utility "
+                )
+
+              )}
+
+            </div>
+
+
+            <div class="utility-type">
+
+              ${escapeHtml(
+
+                cfg.type
+
+                ||
+
+                "Wireless"
+
+              )}
+
+            </div>
+
+
+            ${batteryHtml(
+              cfg
+            )}
+
+          `;
+
+
+          utilityGrid.appendChild(
+            card
+          );
+
+        }
+
+      );
+
+    }
+
+
+    /* ========================================
+       INITIALIZE
+    ======================================== */
+
+
+    await loadImages();
+
+
+    /* MIC ASSIGNMENTS */
+
+
+    docOrder.forEach(
+
+      docId => {
+
+
+        onSnapshot(
+
+          doc(
+
+            db,
+
+            "micAssignments",
+
+            docId
+
+          ),
+
+          docSnap => {
+
+
+            micData[docId] =
+
+              docSnap.data()
+
+              ||
+
+              null;
+
+
+            renderMicBoard();
+
+          }
+
+        );
+
+      }
+
+    );
+
+
+    /* WIRELESS STATUS */
+
+
+    [
+
+      ...docOrder,
+
+      ...utilityOrder
+
+    ].forEach(
+
+      id => {
+
+
+        onSnapshot(
+
+          doc(
+
+            db,
+
+            "wirelessStatus",
+
+            id
+
+          ),
+
+          docSnap => {
+
+
+            wirelessStatus[id] =
+
+              docSnap.data()
+
+              ||
+
+              {};
+
+
+            renderMicBoard();
+
+            renderUtility();
+
+          }
+
+        );
+
+      }
+
+    );
+
+
+    renderMicBoard();
+
+    renderUtility();
+
+
   </script>
-  <script>
-    setTimeout(() => {
-      location.reload();
-    }, 7200000);
-  </script>
+
+
 </body>
+
 </html>
