@@ -16,95 +16,51 @@
   <style>
 
     :root {
+      --bg: #06090f;
+      --panel: #0f141c;
+      --text: #f5f7fa;
+      --accent: #8ed8ff;
+      --muted: rgba(255,255,255,0.72);
 
-      --bg:
-        #06090f;
-
-      --panel:
-        #0f141c;
-
-      --text:
-        #f5f7fa;
-
-      --accent:
-        #8ed8ff;
-
-      --muted:
-        rgba(255,255,255,0.72);
-
-      --green:
-        #31d17c;
-
-      --yellow:
-        #ffd166;
-
-      --red:
-        #ff5d73;
-
-      --offline:
-        #8b96a3;
-
+      --green: #31d17c;
+      --yellow: #ffd166;
+      --red: #ff5d73;
+      --offline: #8b96a3;
     }
 
 
     * {
-      box-sizing:
-        border-box;
+      box-sizing: border-box;
     }
 
 
     html,
     body {
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
 
-      min-height:
-        100%;
+      font-family: Arial, sans-serif;
 
-      margin:
-        0;
-
-      padding:
-        0;
-
-      font-family:
-        Arial,
-        sans-serif;
-
-      color:
-        var(--text);
+      color: var(--text);
 
       background:
-
         radial-gradient(
-
           circle at top center,
-
           rgba(0,130,255,0.16),
-
           transparent 35%
-
         ),
-
         linear-gradient(
-
           180deg,
-
           #07101a 0%,
-
           #04070c 100%
-
         );
-
     }
 
 
     body {
-
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
+      display: flex;
+      flex-direction: column;
     }
 
 
@@ -115,37 +71,29 @@
 
     .main-layout {
 
-      display:
-        grid;
+      display: grid;
 
       grid-template-columns:
-        minmax(0, 1fr) 340px;
+        minmax(0, 1fr) 365px;
 
-      gap:
-        12px;
+      gap: 12px;
 
-      padding:
-        12px 24px 24px;
+      padding: 12px 24px 24px;
 
-      min-height:
-        100vh;
+      min-height: 100vh;
 
     }
 
 
     .left-side {
 
-      min-width:
-        0;
+      min-width: 0;
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
+      flex-direction: column;
 
-      gap:
-        12px;
+      gap: 12px;
 
     }
 
@@ -157,75 +105,54 @@
 
     .board-shell {
 
-      flex:
-        1;
+      flex: 1;
 
-      min-height:
-        460px;
+      min-height: 460px;
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(255,255,255,0.03),
-
           rgba(255,255,255,0.01)
-
         ),
-
         rgba(0,0,0,0.4);
 
       border:
         1px solid rgba(255,255,255,0.06);
 
-      border-radius:
-        12px;
+      border-radius: 12px;
 
       box-shadow:
-
         inset 0 0 0 1px rgba(255,255,255,0.02),
-
         0 20px 60px rgba(0,0,0,0.45);
 
-      padding:
-        12px;
+      padding: 12px;
 
-      overflow-x:
-        auto;
+      overflow-x: auto;
 
-      display:
-        flex;
+      display: flex;
 
     }
 
 
     .mic-container {
 
-      flex:
-        1;
+      flex: 1;
 
-      min-height:
-        0;
+      min-height: 0;
 
-      display:
-        grid;
+      display: grid;
 
-      grid-auto-flow:
-        column;
+      grid-auto-flow: column;
 
       grid-auto-columns:
         minmax(135px, 1fr);
 
-      gap:
-        2px;
+      gap: 2px;
 
-      width:
-        100%;
+      width: 100%;
 
-      min-width:
-        max-content;
+      min-width: max-content;
 
       background:
         rgba(255,255,255,0.03);
@@ -235,32 +162,23 @@
 
     .mic-card {
 
-      position:
-        relative;
+      position: relative;
 
-      width:
-        100%;
+      width: 100%;
 
-      min-width:
-        135px;
+      min-width: 135px;
 
-      height:
-        100%;
+      height: 100%;
 
-      min-height:
-        430px;
+      min-height: 430px;
 
-      overflow:
-        hidden;
+      overflow: hidden;
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
+      flex-direction: column;
 
-      justify-content:
-        space-between;
+      justify-content: space-between;
 
       border-left:
         1px solid rgba(255,255,255,0.04);
@@ -269,17 +187,11 @@
         1px solid rgba(0,0,0,0.45);
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(255,255,255,0.03),
-
           rgba(0,0,0,0.12)
-
         ),
-
         var(--panel);
 
     }
@@ -287,76 +199,47 @@
 
     .mic-card::before {
 
-      content:
-        "";
+      content: "";
 
-      position:
-        absolute;
+      position: absolute;
 
-      inset:
-        0;
+      inset: 0;
 
-      z-index:
-        1;
+      z-index: 1;
 
-      pointer-events:
-        none;
+      pointer-events: none;
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(0,0,0,0.15) 0%,
-
           rgba(0,0,0,0.06) 22%,
-
           rgba(0,0,0,0.20) 64%,
-
           rgba(0,0,0,0.74) 100%
-
         );
 
     }
 
 
     .mic-card.has-photo {
-
-      background-size:
-        cover;
-
-      background-position:
-        center;
-
-      background-repeat:
-        no-repeat;
-
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
     }
 
 
     .mic-card.no-photo {
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(255,255,255,0.03),
-
           rgba(255,255,255,0.01)
-
         ),
-
         linear-gradient(
-
           180deg,
-
           #49525f 0%,
-
           #313947 100%
-
         );
 
     }
@@ -365,25 +248,15 @@
     .mic-card.backup {
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(255,255,255,0.05),
-
           rgba(255,255,255,0.02)
-
         ),
-
         linear-gradient(
-
           180deg,
-
           #8fdcff 0%,
-
           #71c9f2 100%
-
         );
 
     }
@@ -392,17 +265,11 @@
     .mic-card.backup::before {
 
       background:
-
         linear-gradient(
-
           180deg,
-
           rgba(0,0,0,0.10) 0%,
-
           rgba(0,0,0,0.04) 35%,
-
           rgba(0,0,0,0.38) 100%
-
         );
 
     }
@@ -410,180 +277,129 @@
 
     .mic-inner {
 
-      position:
-        relative;
+      position: relative;
 
-      z-index:
-        2;
+      z-index: 2;
 
-      height:
-        100%;
+      height: 100%;
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
-
-    }
-
-
-    .mic-top {
-
-      text-align:
-        center;
-
-      padding:
-        12px 8px 0;
-
-    }
-
-
-    .mic-number {
-
-      margin:
-        0;
-
-      font-size:
-        clamp(1rem, 1.25vw, 1.5rem);
-
-      font-style:
-        italic;
-
-      font-weight:
-        900;
-
-      color:
-        rgba(255,255,255,0.98);
-
-      letter-spacing:
-        0.05em;
-
-      text-shadow:
-
-        0 2px 8px rgba(0,0,0,0.45),
-
-        0 4px 18px rgba(0,0,0,0.55);
+      flex-direction: column;
 
     }
 
 
     .mic-middle {
 
-      flex:
-        1;
+      flex: 1;
 
-      display:
-        flex;
+      display: flex;
 
-      align-items:
-        center;
+      align-items: center;
 
-      justify-content:
-        center;
+      justify-content: center;
 
-      text-align:
-        center;
+      text-align: center;
 
       padding:
-        16px 10px 12px;
+        18px 10px 12px;
 
     }
 
 
     .name-stack {
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
+      flex-direction: column;
 
-      align-items:
-        center;
+      align-items: center;
 
-      gap:
-        8px;
+      gap: 8px;
 
-      width:
-        100%;
+      width: 100%;
 
     }
 
 
     .mic-name {
 
-      margin:
-        0;
+      margin: 0;
 
       font-size:
         clamp(1.35rem, 2.1vw, 2.45rem);
 
-      font-weight:
-        900;
+      font-weight: 900;
 
-      line-height:
-        1.04;
+      line-height: 1.04;
 
-      color:
-        #fff;
+      color: #fff;
 
       text-shadow:
+        0 4px 12px rgba(0,0,0,0.65),
+        0 8px 28px rgba(0,0,0,0.85);
 
-        0 4px 12px rgba(0,0,0,0.5),
+      overflow-wrap: break-word;
 
-        0 8px 28px rgba(0,0,0,0.65);
+    }
 
-      overflow-wrap:
-        break-word;
+
+    .mic-number {
+
+      margin-top: 3px;
+
+      font-size:
+        clamp(1.2rem, 1.55vw, 1.8rem);
+
+      font-weight: 900;
+
+      color: #fff;
+
+      letter-spacing:
+        0.02em;
+
+      text-shadow:
+        0 2px 3px rgba(0,0,0,1),
+        0 4px 10px rgba(0,0,0,0.95),
+        0 8px 24px rgba(0,0,0,0.9),
+        0 0 18px rgba(0,0,0,0.8);
 
     }
 
 
     .meta-stack {
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
+      flex-direction: column;
 
-      align-items:
-        center;
+      align-items: center;
 
-      gap:
-        6px;
+      gap: 6px;
 
-      margin-top:
-        4px;
+      margin-top: 5px;
 
     }
 
 
     .meta-line {
 
-      margin:
-        0;
+      margin: 0;
 
       font-size:
         clamp(0.9rem, 1.1vw, 1.18rem);
 
-      font-weight:
-        800;
+      font-weight: 800;
 
-      text-align:
-        center;
+      text-align: center;
 
-      line-height:
-        1.2;
+      line-height: 1.2;
 
-      color:
-        #fff;
+      color: #fff;
 
       text-shadow:
-
         0 2px 6px rgba(0,0,0,0.5),
-
         0 4px 14px rgba(0,0,0,0.6);
 
     }
@@ -591,20 +407,17 @@
 
     .meta-label {
 
-      color:
-        var(--accent);
+      color: var(--accent);
 
-      margin-right:
-        6px;
+      margin-right: 6px;
 
-      font-weight:
-        900;
+      font-weight: 900;
 
     }
 
 
     /* ========================================
-       BATTERY STATUS
+       BATTERY
     ======================================== */
 
 
@@ -616,8 +429,7 @@
       padding:
         8px 9px;
 
-      border-radius:
-        9px;
+      border-radius: 9px;
 
       background:
         rgba(0,0,0,0.55);
@@ -625,29 +437,21 @@
       border:
         1px solid rgba(255,255,255,0.10);
 
-      display:
-        flex;
+      display: flex;
 
-      align-items:
-        center;
+      align-items: center;
 
-      justify-content:
-        space-between;
+      justify-content: space-between;
 
-      gap:
-        6px;
+      gap: 6px;
 
-      font-size:
-        0.73rem;
+      font-size: 0.73rem;
 
-      font-weight:
-        900;
+      font-weight: 900;
 
-      text-transform:
-        uppercase;
+      text-transform: uppercase;
 
-      letter-spacing:
-        0.035em;
+      letter-spacing: 0.035em;
 
       backdrop-filter:
         blur(5px);
@@ -657,66 +461,50 @@
 
     .battery-left {
 
-      display:
-        flex;
+      display: flex;
 
-      align-items:
-        center;
+      align-items: center;
 
-      gap:
-        7px;
+      gap: 7px;
 
-      min-width:
-        0;
+      min-width: 0;
 
     }
 
 
     .battery-icon {
 
-      width:
-        25px;
+      width: 25px;
 
-      height:
-        12px;
+      height: 12px;
 
       border:
         2px solid currentColor;
 
-      border-radius:
-        3px;
+      border-radius: 3px;
 
-      padding:
-        1px;
+      padding: 1px;
 
-      position:
-        relative;
+      position: relative;
 
-      flex-shrink:
-        0;
+      flex-shrink: 0;
 
     }
 
 
     .battery-icon::after {
 
-      content:
-        "";
+      content: "";
 
-      position:
-        absolute;
+      position: absolute;
 
-      width:
-        3px;
+      width: 3px;
 
-      height:
-        6px;
+      height: 6px;
 
-      right:
-        -5px;
+      right: -5px;
 
-      top:
-        1px;
+      top: 1px;
 
       border-radius:
         0 2px 2px 0;
@@ -729,70 +517,52 @@
 
     .battery-fill {
 
-      height:
-        100%;
+      height: 100%;
 
-      border-radius:
-        1px;
+      border-radius: 1px;
 
-      background:
-        currentColor;
+      background: currentColor;
 
     }
 
 
     .battery-status.live.good {
-
-      color:
-        var(--green);
-
+      color: var(--green);
     }
 
 
     .battery-status.live.warn {
-
-      color:
-        var(--yellow);
-
+      color: var(--yellow);
     }
 
 
     .battery-status.live.low {
-
-      color:
-        var(--red);
-
+      color: var(--red);
     }
 
 
     .battery-status.offline {
-
-      color:
-        var(--offline);
-
+      color: var(--offline);
     }
 
 
     .battery-status.unknown {
 
-      color:
-        var(--offline);
+      color: var(--offline);
 
-      opacity:
-        0.8;
+      opacity: 0.8;
 
     }
 
 
     /* ========================================
-       UTILITY WIRELESS
+       UTILITY
     ======================================== */
 
 
     .utility-wrap {
 
-      padding:
-        12px;
+      padding: 12px;
 
       border:
         1px solid rgba(255,255,255,0.07);
@@ -800,53 +570,43 @@
       background:
         rgba(0,0,0,0.31);
 
-      border-radius:
-        12px;
+      border-radius: 12px;
 
     }
 
 
     .utility-heading {
 
-      display:
-        flex;
+      display: flex;
 
-      align-items:
-        center;
+      align-items: center;
 
-      margin-bottom:
-        9px;
+      margin-bottom: 9px;
 
     }
 
 
     .utility-heading h2 {
 
-      margin:
-        0;
+      margin: 0;
 
-      font-size:
-        0.9rem;
+      font-size: 0.9rem;
 
-      letter-spacing:
-        0.08em;
+      letter-spacing: 0.08em;
 
-      text-transform:
-        uppercase;
+      text-transform: uppercase;
 
     }
 
 
     .utility-grid {
 
-      display:
-        grid;
+      display: grid;
 
       grid-template-columns:
         repeat(4, minmax(145px, 1fr));
 
-      gap:
-        8px;
+      gap: 8px;
 
     }
 
@@ -859,42 +619,33 @@
       background:
         rgba(255,255,255,0.035);
 
-      border-radius:
-        9px;
+      border-radius: 9px;
 
-      padding:
-        10px;
+      padding: 10px;
 
     }
 
 
     .utility-name {
 
-      font-weight:
-        900;
+      font-weight: 900;
 
-      font-size:
-        0.93rem;
+      font-size: 0.93rem;
 
     }
 
 
     .utility-type {
 
-      margin-top:
-        2px;
+      margin-top: 2px;
 
-      color:
-        var(--muted);
+      color: var(--muted);
 
-      font-size:
-        0.73rem;
+      font-size: 0.73rem;
 
-      text-transform:
-        uppercase;
+      text-transform: uppercase;
 
-      letter-spacing:
-        0.07em;
+      letter-spacing: 0.07em;
 
     }
 
@@ -920,14 +671,11 @@
       border:
         1px solid rgba(255,255,255,0.08);
 
-      border-radius:
-        14px;
+      border-radius: 14px;
 
-      padding:
-        16px;
+      padding: 16px;
 
-      overflow-y:
-        auto;
+      overflow-y: auto;
 
       max-height:
         calc(100vh - 24px);
@@ -935,13 +683,61 @@
     }
 
 
+    .plan-leaders {
+
+      margin-bottom: 14px;
+
+      padding-bottom: 12px;
+
+      border-bottom:
+        1px solid rgba(255,255,255,0.08);
+
+    }
+
+
+    .plan-leaders-label {
+
+      color: var(--muted);
+
+      font-size: 0.68rem;
+
+      font-weight: 800;
+
+      letter-spacing: 0.09em;
+
+      text-transform: uppercase;
+
+      margin-bottom: 4px;
+
+    }
+
+
+    .plan-leaders-value {
+
+      color: #fff;
+
+      font-size: 0.91rem;
+
+      font-weight: 800;
+
+      line-height: 1.35;
+
+    }
+
+
     .order-header {
 
-      padding-bottom:
-        11px;
+      display: flex;
 
-      margin-bottom:
-        8px;
+      align-items: center;
+
+      justify-content: space-between;
+
+      gap: 10px;
+
+      padding-bottom: 11px;
+
+      margin-bottom: 8px;
 
       border-bottom:
         1px solid rgba(255,255,255,0.10);
@@ -951,63 +747,63 @@
 
     .order-label {
 
-      color:
-        var(--accent);
+      color: var(--accent);
 
-      font-size:
-        0.83rem;
+      font-size: 0.83rem;
 
-      font-weight:
-        900;
+      font-weight: 900;
 
-      letter-spacing:
-        0.12em;
+      letter-spacing: 0.12em;
 
-      text-transform:
-        uppercase;
+      text-transform: uppercase;
+
+    }
+
+
+    .order-date {
+
+      color: var(--muted);
+
+      font-size: 0.73rem;
+
+      font-weight: 750;
+
+      text-align: right;
+
+      white-space: nowrap;
 
     }
 
 
     .order-list {
 
-      display:
-        flex;
+      display: flex;
 
-      flex-direction:
-        column;
+      flex-direction: column;
 
-      gap:
-        5px;
+      gap: 5px;
 
     }
 
 
     .order-section-header {
 
-      margin-top:
-        14px;
+      margin-top: 14px;
 
-      margin-bottom:
-        3px;
+      margin-bottom: 3px;
 
       padding:
         8px 4px 6px;
 
-      color:
-        var(--accent);
+      color: var(--accent);
 
-      font-size:
-        0.76rem;
+      font-size: 0.76rem;
 
-      font-weight:
-        900;
+      font-weight: 900;
 
-      letter-spacing:
-        0.11em;
+      letter-spacing: 0.11em;
 
-      text-transform:
-        uppercase;
+      text-transform: uppercase;
 
       border-bottom:
         1px solid rgba(142,216,255,0.25);
@@ -1016,29 +812,25 @@
 
 
     .order-section-header:first-child {
-
-      margin-top:
-        0;
-
+      margin-top: 0;
     }
 
 
     .order-item {
 
-      display:
-        flex;
+      display: grid;
 
-      align-items:
-        flex-start;
+      grid-template-columns:
+        22px minmax(0, 1fr) auto;
 
-      gap:
-        9px;
+      gap: 9px;
+
+      align-items: start;
 
       padding:
         9px 9px;
 
-      border-radius:
-        8px;
+      border-radius: 8px;
 
       background:
         rgba(255,255,255,0.035);
@@ -1046,8 +838,7 @@
       border:
         1px solid rgba(255,255,255,0.055);
 
-      font-size:
-        0.84rem;
+      font-size: 0.84rem;
 
     }
 
@@ -1065,112 +856,112 @@
 
     .order-number {
 
-      width:
-        21px;
-
-      flex-shrink:
-        0;
-
       color:
         rgba(255,255,255,0.40);
 
-      font-size:
-        0.70rem;
+      font-size: 0.70rem;
 
-      font-weight:
-        800;
+      font-weight: 800;
 
-      padding-top:
-        2px;
+      padding-top: 2px;
 
     }
 
 
     .order-item-content {
-
-      flex:
-        1;
-
-      min-width:
-        0;
-
+      min-width: 0;
     }
 
 
     .order-title-text {
 
-      color:
-        #fff;
+      color: #fff;
 
-      font-weight:
-        850;
+      font-weight: 850;
 
-      line-height:
-        1.2;
+      line-height: 1.2;
 
     }
 
 
     .order-item.song .order-title-text {
-
-      color:
-        #dff5ff;
-
-    }
-
-
-    .order-meta {
-
-      display:
-        flex;
-
-      flex-wrap:
-        wrap;
-
-      gap:
-        4px 12px;
-
-      margin-top:
-        5px;
-
-      color:
-        var(--muted);
-
-      font-size:
-        0.69rem;
-
-      font-weight:
-        700;
-
-    }
-
-
-    .order-item.song .order-meta {
-
-      color:
-        rgba(223,245,255,0.74);
-
+      color: #dff5ff;
     }
 
 
     .order-key {
 
-      color:
-        var(--accent);
+      margin-top: 5px;
 
-      font-weight:
-        900;
+      color: var(--accent);
+
+      font-size: 0.69rem;
+
+      font-weight: 900;
+
+    }
+
+
+    .order-description {
+
+      margin-top: 4px;
+
+      color: var(--muted);
+
+      font-size: 0.69rem;
+
+      line-height: 1.35;
+
+      font-weight: 600;
+
+    }
+
+
+    .order-item-leader {
+
+      min-width: 70px;
+
+      max-width: 105px;
+
+      text-align: right;
+
+      color:
+        rgba(255,255,255,0.82);
+
+      font-size: 0.67rem;
+
+      font-weight: 800;
+
+      line-height: 1.25;
+
+      align-self: center;
+
+    }
+
+
+    .order-item-leader-label {
+
+      display: block;
+
+      color:
+        rgba(255,255,255,0.40);
+
+      font-size: 0.58rem;
+
+      letter-spacing: 0.06em;
+
+      text-transform: uppercase;
+
+      margin-bottom: 2px;
 
     }
 
 
     .planning-empty {
 
-      color:
-        var(--muted);
+      color: var(--muted);
 
-      font-size:
-        0.86rem;
+      font-size: 0.86rem;
 
       padding:
         8px 3px;
@@ -1183,10 +974,7 @@
     ======================================== */
 
 
-    @media (
-      max-width:
-        900px
-    ) {
+    @media (max-width: 900px) {
 
       .main-layout {
 
@@ -1200,10 +988,7 @@
 
 
       .order-panel {
-
-        max-height:
-          none;
-
+        max-height: none;
       }
 
 
@@ -1217,15 +1002,20 @@
     }
 
 
-    @media (
-      max-width:
-        640px
-    ) {
+    @media (max-width: 640px) {
 
       .utility-grid {
 
         grid-template-columns:
           1fr 1fr;
+
+      }
+
+
+      .order-item {
+
+        grid-template-columns:
+          20px minmax(0, 1fr) auto;
 
       }
 
@@ -1242,12 +1032,8 @@
   <div class="main-layout">
 
 
-    <!-- LEFT SIDE -->
-
     <div class="left-side">
 
-
-      <!-- MIC ASSIGNMENTS -->
 
       <div class="board-shell">
 
@@ -1258,8 +1044,6 @@
 
       </div>
 
-
-      <!-- UTILITY WIRELESS -->
 
       <div class="utility-wrap">
 
@@ -1283,9 +1067,26 @@
     </div>
 
 
-    <!-- ORDER OF SERVICE -->
-
     <aside class="order-panel">
+
+
+      <div
+        class="plan-leaders"
+        id="planLeadersWrap"
+      >
+
+        <div class="plan-leaders-label">
+          Scheduled Audio:
+        </div>
+
+        <div
+          class="plan-leaders-value"
+          id="planLeaders"
+        >
+          --
+        </div>
+
+      </div>
 
 
       <div class="order-header">
@@ -1293,6 +1094,11 @@
         <div class="order-label">
           Order of Service
         </div>
+
+        <div
+          class="order-date"
+          id="orderDate"
+        ></div>
 
       </div>
 
@@ -1334,11 +1140,6 @@
     "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 
-    /* ========================================
-       FIREBASE
-    ======================================== */
-
-
     const firebaseConfig = {
 
       apiKey:
@@ -1363,48 +1164,51 @@
 
 
     const app =
-
       initializeApp(
         firebaseConfig
       );
 
 
     const db =
-
       getFirestore(
         app
       );
 
 
-    /* ========================================
-       DOM
-    ======================================== */
-
-
     const micBoard =
-
       document.getElementById(
         "micBoard"
       );
 
 
     const utilityGrid =
-
       document.getElementById(
         "utilityGrid"
       );
 
 
     const orderEl =
-
       document.getElementById(
         "orderOfService"
       );
 
 
-    /* ========================================
-       RECEIVER IDS
-    ======================================== */
+    const orderDate =
+      document.getElementById(
+        "orderDate"
+      );
+
+
+    const planLeaders =
+      document.getElementById(
+        "planLeaders"
+      );
+
+
+    const planLeadersWrap =
+      document.getElementById(
+        "planLeadersWrap"
+      );
 
 
     const docOrder = [
@@ -1432,30 +1236,18 @@
     ];
 
 
-    let cachedPhotos =
-      {};
+    let cachedPhotos = {};
 
+    let micData = {};
 
-    let micData =
-      {};
-
-
-    let wirelessStatus =
-      {};
-
-
-    /* ========================================
-       HELPERS
-    ======================================== */
+    let wirelessStatus = {};
 
 
     function escapeHtml(
       str = ""
     ) {
 
-      return String(
-        str
-      )
+      return String(str)
 
         .replace(
           /&/g,
@@ -1489,13 +1281,8 @@
       value
     ) {
 
-      if (
-        !value
-      ) {
-
+      if (!value)
         return "";
-
-      }
 
 
       const d =
@@ -1504,9 +1291,7 @@
 
           ? value.toDate()
 
-          : new Date(
-              value
-            );
+          : new Date(value);
 
 
       if (
@@ -1539,9 +1324,46 @@
     }
 
 
-    /* ========================================
-       BATTERY
-    ======================================== */
+    function niceDate(
+      value
+    ) {
+
+      if (!value)
+        return "";
+
+
+      const d =
+        new Date(value);
+
+
+      if (
+        Number.isNaN(
+          d.getTime()
+        )
+      ) {
+
+        return "";
+
+      }
+
+
+      return d.toLocaleDateString(
+
+        [],
+
+        {
+
+          month:
+            "short",
+
+          day:
+            "numeric"
+
+        }
+
+      );
+
+    }
 
 
     function batteryClass(
@@ -1559,31 +1381,20 @@
       }
 
 
-      if (
-        !status.online
-      ) {
-
+      if (!status.online)
         return "offline";
-
-      }
 
 
       if (
         Number(status.bars) <= 1
-      ) {
-
+      )
         return "live low";
-
-      }
 
 
       if (
         Number(status.bars) <= 3
-      ) {
-
+      )
         return "live warn";
-
-      }
 
 
       return "live good";
@@ -1594,7 +1405,6 @@
     function batteryHtml(
       status
     ) {
-
 
       if (
         !status ||
@@ -1619,13 +1429,11 @@
 
               </div>
 
-
               <span>
                 Battery --
               </span>
 
             </div>
-
 
             <span>
               Unknown
@@ -1641,19 +1449,11 @@
       const bars =
 
         Math.max(
-
           0,
-
           Math.min(
-
             5,
-
-            Number(
-              status.bars
-            )
-
+            Number(status.bars)
           )
-
         );
 
 
@@ -1662,39 +1462,23 @@
 
 
       const cls =
-
-        batteryClass(
-          status
-        );
+        batteryClass(status);
 
 
       const last =
-
         niceTime(
-
-          status.lastSeen
-
-          ||
-
+          status.lastSeen ||
           status.updatedAt
-
         );
-
-
-      /* LIVE TRANSMITTER */
 
 
       if (
         status.online
       ) {
 
-
         const label =
 
-          status.chargePercent !== null
-
-          &&
-
+          status.chargePercent !== null &&
           status.chargePercent !== undefined
 
             ? `${status.chargePercent}%`
@@ -1719,17 +1503,11 @@
 
               </div>
 
-
               <span>
-
-                ${escapeHtml(
-                  label
-                )}
-
+                ${escapeHtml(label)}
               </span>
 
             </div>
-
 
             <span>
               Live
@@ -1740,9 +1518,6 @@
         `;
 
       }
-
-
-      /* TRANSMITTER OFF / LAST KNOWN */
 
 
       return `
@@ -1762,24 +1537,20 @@
 
             </div>
 
-
             <span>
               Last ${bars}/5
             </span>
 
           </div>
 
-
           <span>
 
             ${
-
               last
 
                 ? `Off • ${escapeHtml(last)}`
 
                 : "Offline"
-
             }
 
           </span>
@@ -1799,13 +1570,9 @@
     onSnapshot(
 
       doc(
-
         db,
-
         "planningCenter",
-
         "current"
-
       ),
 
       docSnap => {
@@ -1819,6 +1586,12 @@
           !data
         ) {
 
+          planLeadersWrap.style.display =
+            "none";
+
+          orderDate.textContent =
+            "";
+
           orderEl.innerHTML = `
 
             <div class="planning-empty">
@@ -1830,6 +1603,54 @@
           return;
 
         }
+
+
+        const overallLeaders =
+
+          Array.isArray(
+            data.leaders
+          )
+
+            ? data.leaders
+
+            : [];
+
+
+        if (
+          overallLeaders.length
+        ) {
+
+          planLeadersWrap.style.display =
+            "";
+
+
+planLeaders.textContent =
+
+  overallLeaders
+
+    .map(
+      leader =>
+        leader.name || ""
+    )
+
+    .filter(Boolean)
+
+    .join(", ");
+
+        }
+
+        else {
+
+          planLeadersWrap.style.display =
+            "none";
+
+        }
+
+
+        orderDate.textContent =
+          niceDate(
+            data.planDate
+          );
 
 
         const order =
@@ -1873,11 +1694,6 @@
               item => {
 
 
-                /* ==============================
-                   HEADER
-                ============================== */
-
-
                 if (
                   item.isHeader
                 ) {
@@ -1901,60 +1717,15 @@
                 visibleItemNumber++;
 
 
-                /* ==============================
-                   ITEM META
-                ============================== */
+                const itemLeaders =
 
-
-                const meta =
-                  [];
-
-
-                if (
-                  item.isSong &&
-                  item.key
-                ) {
-
-                  meta.push(`
-
-                    <span class="order-key">
-
-                      Key:
-                      ${escapeHtml(
-                        item.key
-                      )}
-
-                    </span>
-
-                  `);
-
-                }
-
-
-                if (
                   Array.isArray(
                     item.leaders
                   )
 
-                  &&
+                    ? item.leaders
 
-                  item.leaders.length
-                ) {
-
-                  meta.push(`
-
-                    <span>
-
-                      Leader:
-                      ${escapeHtml(
-                        item.leaders.join(", ")
-                      )}
-
-                    </span>
-
-                  `);
-
-                }
+                    : [];
 
 
                 return `
@@ -1962,6 +1733,7 @@
                   <div
                     class="order-item ${item.isSong ? "song" : ""}"
                   >
+
 
                     <div class="order-number">
 
@@ -1984,25 +1756,83 @@
 
 
                       ${
-
-                        meta.length
+                        item.isSong &&
+                        item.key
 
                           ? `
 
-                            <div class="order-meta">
+                            <div class="order-key">
 
-                              ${meta.join("")}
+                              Key:
+                              ${escapeHtml(
+                                item.key
+                              )}
 
                             </div>
 
                           `
 
                           : ""
+                      }
 
+
+                      ${
+                        item.description
+
+                          ? `
+
+                            <div class="order-description">
+
+                              ${escapeHtml(
+                                item.description
+                              )}
+
+                            </div>
+
+                          `
+
+                          : ""
                       }
 
 
                     </div>
+
+
+${
+  itemLeaders.length
+
+    ? `
+
+      <div class="order-item-leader">
+
+        ${
+          item.isSong
+
+            ? `
+
+              <span class="order-item-leader-label">
+                Leader
+              </span>
+
+            `
+
+            : ""
+        }
+
+        ${escapeHtml(
+          itemLeaders.join(", ")
+        )}
+
+      </div>
+
+    `
+
+    : `
+
+      <div></div>
+
+    `
+}
 
 
                   </div>
@@ -2027,17 +1857,13 @@
 
     async function loadImages() {
 
-
       const snapshot =
 
         await getDocs(
 
           collection(
-
             db,
-
             "images"
-
           )
 
         );
@@ -2045,11 +1871,10 @@
 
       snapshot.forEach(
 
-        docSnap => {
-
+        d => {
 
           const data =
-            docSnap.data();
+            d.data();
 
 
           if (
@@ -2059,8 +1884,7 @@
             cachedPhotos[
               data.name
             ] =
-              data.photoURL ||
-              "";
+              data.photoURL || "";
 
           }
 
@@ -2078,7 +1902,6 @@
 
     function renderMicBoard() {
 
-
       micBoard.innerHTML =
         "";
 
@@ -2087,7 +1910,6 @@
 
         docId => {
 
-
           const data =
             micData[docId];
 
@@ -2095,11 +1917,8 @@
           if (
             !data ||
             data.name === "No One"
-          ) {
-
+          )
             return;
-
-          }
 
 
           const micCard =
@@ -2127,8 +1946,7 @@
           const lowerName =
 
             String(
-              data.name ||
-              ""
+              data.name || ""
             )
             .toLowerCase();
 
@@ -2136,8 +1954,7 @@
           const lowerPosition =
 
             String(
-              data.position ||
-              ""
+              data.position || ""
             )
             .toLowerCase();
 
@@ -2182,13 +1999,10 @@
 
           if (
             isBackup
-          ) {
-
+          )
             micCard.classList.add(
               "backup"
             );
-
-          }
 
 
           if (
@@ -2196,7 +2010,6 @@
           ) {
 
             micCard.style.backgroundImage =
-
               `url("${photoUrl}")`;
 
           }
@@ -2207,25 +2020,6 @@
             <div class="mic-inner">
 
 
-              <div class="mic-top">
-
-                <p class="mic-number">
-
-                  ${escapeHtml(
-
-                    data.micNumber
-
-                      ? data.micNumber
-
-                      : "Mic"
-
-                  )}
-
-                </p>
-
-              </div>
-
-
               <div class="mic-middle">
 
                 <div class="name-stack">
@@ -2234,17 +2028,29 @@
                   <h3 class="mic-name">
 
                     ${escapeHtml(
-
                       data.name ||
                       "Unassigned"
-
                     )}
 
                   </h3>
 
 
-                  ${
+                  <div class="mic-number">
 
+                    ${escapeHtml(
+
+                      data.micNumber
+
+                        ? `Mic: ${data.micNumber}`
+
+                        : "Mic: --"
+
+                    )}
+
+                  </div>
+
+
+                  ${
                     data.inEarPack ||
                     data.position
 
@@ -2252,9 +2058,7 @@
 
                         <div class="meta-stack">
 
-
                           ${
-
                             data.inEarPack
 
                               ? `
@@ -2274,12 +2078,10 @@
                               `
 
                               : ""
-
                           }
 
 
                           ${
-
                             data.position
 
                               ? `
@@ -2299,16 +2101,13 @@
                               `
 
                               : ""
-
                           }
-
 
                         </div>
 
                       `
 
                       : ""
-
                   }
 
 
@@ -2345,7 +2144,6 @@
 
     function renderUtility() {
 
-
       utilityGrid.innerHTML =
         "";
 
@@ -2353,7 +2151,6 @@
       utilityOrder.forEach(
 
         id => {
-
 
           const cfg =
 
@@ -2398,21 +2195,14 @@
             <div class="utility-type">
 
               ${escapeHtml(
-
-                cfg.type
-
-                ||
-
+                cfg.type ||
                 "Wireless"
-
               )}
 
             </div>
 
 
-            ${batteryHtml(
-              cfg
-            )}
+            ${batteryHtml(cfg)}
 
           `;
 
@@ -2436,28 +2226,19 @@
     await loadImages();
 
 
-    /* MIC ASSIGNMENTS */
-
-
     docOrder.forEach(
 
       docId => {
 
-
         onSnapshot(
 
           doc(
-
             db,
-
             "micAssignments",
-
             docId
-
           ),
 
           docSnap => {
-
 
             micData[docId] =
 
@@ -2479,34 +2260,24 @@
     );
 
 
-    /* WIRELESS STATUS */
-
-
     [
 
       ...docOrder,
-
       ...utilityOrder
 
     ].forEach(
 
       id => {
 
-
         onSnapshot(
 
           doc(
-
             db,
-
             "wirelessStatus",
-
             id
-
           ),
 
           docSnap => {
-
 
             wirelessStatus[id] =
 
@@ -2536,7 +2307,6 @@
 
 
   </script>
-
 
 </body>
 
