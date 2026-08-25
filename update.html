@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Update Mic Assignments</title>
 
   <script type="module">
@@ -13,259 +13,3449 @@
       doc,
       getDoc,
       setDoc,
+      deleteDoc,
       collection,
-      getDocs
+      getDocs,
+      writeBatch
     } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    import {
+      getStorage,
+      ref,
+      uploadBytes,
+      getDownloadURL,
+      deleteObject
+    } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBvx4480OFZ1hSkgLsqe4KO7bAWny-kG_U",
       authDomain: "micassignments.firebaseapp.com",
       projectId: "micassignments",
-      storageBucket: "micassignments.appspot.com",
+      storageBucket: "micassignments.firebasestorage.app",
       messagingSenderId: "1010248680745",
       appId: "1:1010248680745:web:b82c69767cc857269c2338"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     const assignmentsCollection = "micAssignments";
     const imagesCollection = "images";
-    const settingsDocRef = doc(db, "uiSettings", "main");
 
-    // ✅ Defines ordering AND which ones feed Vox 1–4
-    const docOrder = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    const wirelessConfigRef = doc(db, "wirelessConfig", "main");
+    const planningConfigRef = doc(db, "planningCenter", "config");
+    const serviceTypesRef = doc(db, "planningCenter", "serviceTypes");
 
-function cleanName(v) {
-  if (!v) return "";
-  const s = String(v).trim();
-  if (!s) return "";
-  return s; // keep "No One"
-}
+    const docOrder = [
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine"
+    ];
+
+    const utilityOrder = [
+      "utility1",
+      "utility2",
+      "utility3",
+      "utility4"
+    ];
+
+    function cleanName(value) {
+      return value ? String(value).trim() : "";
+    }
+
+    function escapeHtml(str = "") {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function slugifyName(name) {
+      return String(name || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function flash(message) {
+      const el = document.getElementById("flash");
+
+      el.textContent = message;
+      el.classList.add("show");
+
+      clearTimeout(window.__flashTimer);
+
+      window.__flashTimer = setTimeout(() => {
+        el.classList.remove("show");
+      }, 2200);
+    }
+
+    /* ========================================
+       PLANNING CENTER / WIRELESS SETTINGS
+    ======================================== */
 
     async function loadSettings() {
-      const snapshot = await getDoc(settingsDocRef);
-      const data = snapshot.data();
-      if (data) {
-        document.getElementById("titleInput").value = data.title || "";
-        document.getElementById("taglineInput").value = data.tagline || "";
-        document.getElementById("engineerInput").value = data.engineer || "";
+      const [
+        wirelessSnap,
+        planningSnap,
+        serviceTypesSnap
+      ] = await Promise.all([
+        getDoc(wirelessConfigRef),
+        getDoc(planningConfigRef),
+        getDoc(serviceTypesRef)
+      ]);
+
+      const wireless =
+        wirelessSnap.data() || {};
+
+      [
+        ...docOrder,
+        ...utilityOrder
+      ].forEach(id => {
+        const cfg =
+          wireless[id] || {};
+
+        const ip =
+          document.getElementById(`ip-${id}`);
+
+        const label =
+          document.getElementById(`label-${id}`);
+
+        const type =
+          document.getElementById(`type-${id}`);
+
+        if (ip) {
+          ip.value =
+            cfg.ip || "";
+        }
+
+        if (label) {
+          label.value =
+            cfg.label || "";
+        }
+
+        if (type) {
+          type.value =
+            cfg.type || "";
+        }
+      });
+
+      const planning =
+        planningSnap.data() || {};
+
+      document
+        .getElementById("leaderKeywords")
+        .value =
+          planning.leaderKeywords ||
+          "Worship Leader, Service Leader, Speaker, Pastor";
+
+      document
+        .getElementById("lookaheadDays")
+        .value =
+          Number.isFinite(
+            planning.lookaheadDays
+          )
+            ? planning.lookaheadDays
+            : 14;
+
+      const select =
+        document.getElementById(
+          "serviceTypeSelect"
+        );
+
+      const types =
+        serviceTypesSnap.data()?.items || [];
+
+      select.innerHTML =
+        `
+          <option value="">
+            Select a Planning Center service type
+          </option>
+        `
+        +
+        types
+          .map(type => `
+            <option
+              value="${escapeHtml(type.id)}"
+            >
+              ${escapeHtml(
+                type.displayName ||
+                type.name
+              )}
+            </option>
+          `)
+          .join("");
+
+      if (
+        planning.serviceTypeId
+      ) {
+        select.value =
+          planning.serviceTypeId;
       }
+
+      const syncNote =
+        document.getElementById(
+          "serviceTypesStatus"
+        );
+
+      syncNote.textContent =
+        types.length
+          ? `${types.length} Planning Center service type${
+              types.length === 1
+                ? ""
+                : "s"
+            } available.`
+          : "No Planning Center plan folders have synced yet.";
     }
 
-    async function saveSettings() {
-      const title = document.getElementById("titleInput").value;
-      const tagline = document.getElementById("taglineInput").value;
-      const engineer = document.getElementById("engineerInput").value;
+    async function savePlanning() {
+      const select =
+        document.getElementById(
+          "serviceTypeSelect"
+        );
 
-      await setDoc(settingsDocRef, { title, tagline, engineer }, { merge: true });
-      alert("✅ Page text updated!");
+      const serviceTypeId =
+        select.value;
+
+      const selected =
+        select.selectedOptions[0];
+
+      const serviceTypeName =
+        serviceTypeId
+          ? selected?.textContent
+              ?.trim() || ""
+          : "";
+
+      const leaderKeywords =
+        document
+          .getElementById(
+            "leaderKeywords"
+          )
+          .value
+          .trim();
+
+      const lookaheadDays =
+        Math.max(
+          1,
+          Number(
+            document
+              .getElementById(
+                "lookaheadDays"
+              )
+              .value
+          ) || 14
+        );
+
+      await setDoc(
+        planningConfigRef,
+        {
+          serviceTypeId,
+          serviceTypeName,
+          leaderKeywords,
+          lookaheadDays,
+          updatedAt:
+            new Date()
+              .toISOString()
+        },
+        {
+          merge: true
+        }
+      );
+
+      flash(
+        "Planning Center settings saved."
+      );
     }
 
-    async function loadPage() {
-      await loadSettings();
+    function wirelessBlock(
+      id,
+      title,
+      defaultType = ""
+    ) {
+      return `
+        <div class="receiver-row">
 
-      const now = new Date();
-      const timeString = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      document.getElementById("lastSaved").textContent = `Last Saved At: ${timeString}`;
+          <div>
+            <label>
+              Display Name
+            </label>
 
-      const form = document.getElementById("micForm");
+            <input
+              id="label-${id}"
+              type="text"
+              placeholder="${escapeHtml(title)}"
+            >
+          </div>
+
+          <div>
+            <label>
+              Receiver IP
+            </label>
+
+            <input
+              id="ip-${id}"
+              type="text"
+              inputmode="decimal"
+              placeholder="192.168.50.x"
+            >
+          </div>
+
+          <div>
+            <label>
+              Type
+            </label>
+
+            <input
+              id="type-${id}"
+              type="text"
+              placeholder="${escapeHtml(
+                defaultType ||
+                "Handheld / Headset"
+              )}"
+            >
+          </div>
+
+        </div>
+      `;
+    }
+
+    function buildWirelessFields() {
+      document
+        .getElementById(
+          "assignableReceivers"
+        )
+        .innerHTML =
+          docOrder
+            .map(
+              (
+                id,
+                index
+              ) =>
+                wirelessBlock(
+                  id,
+                  `Mic ${index + 1}`,
+                  "QLXD"
+                )
+            )
+            .join("");
+
+      const defaults = [
+        [
+          "Utility Handheld 1",
+          "Handheld"
+        ],
+        [
+          "Utility Handheld 2",
+          "Handheld"
+        ],
+        [
+          "Utility Headset 1",
+          "Headset"
+        ],
+        [
+          "Utility Headset 2",
+          "Headset"
+        ]
+      ];
+
+      document
+        .getElementById(
+          "utilityReceivers"
+        )
+        .innerHTML =
+          utilityOrder
+            .map(
+              (
+                id,
+                index
+              ) =>
+                wirelessBlock(
+                  id,
+                  defaults[index][0],
+                  defaults[index][1]
+                )
+            )
+            .join("");
+    }
+
+    async function saveWireless() {
+      const payload = {};
+
+      [
+        ...docOrder,
+        ...utilityOrder
+      ].forEach(
+        (
+          id,
+          index
+        ) => {
+          const fallbackLabel =
+            index < 9
+              ? `Mic ${index + 1}`
+              : [
+                  "Utility Handheld 1",
+                  "Utility Handheld 2",
+                  "Utility Headset 1",
+                  "Utility Headset 2"
+                ][index - 9];
+
+          payload[id] = {
+            label:
+              document
+                .getElementById(
+                  `label-${id}`
+                )
+                .value
+                .trim()
+              ||
+              fallbackLabel,
+
+            ip:
+              document
+                .getElementById(
+                  `ip-${id}`
+                )
+                .value
+                .trim(),
+
+            type:
+              document
+                .getElementById(
+                  `type-${id}`
+                )
+                .value
+                .trim()
+              ||
+              (
+                index < 9
+                  ? "QLXD"
+                  : "Wireless"
+              )
+          };
+        }
+      );
+
+      payload.updatedAt =
+        new Date()
+          .toISOString();
+
+      await setDoc(
+        wirelessConfigRef,
+        payload,
+        {
+          merge: true
+        }
+      );
+
+      flash(
+        "Wireless receiver settings saved."
+      );
+    }
+
+    /* ========================================
+       MIC ASSIGNMENTS
+    ======================================== */
+
+    async function loadMicAssignments() {
+      const form =
+        document.getElementById(
+          "micForm"
+        );
+
       form.innerHTML = "";
 
-      const namesSnapshot = await getDocs(collection(db, imagesCollection));
+      const namesSnapshot =
+        await getDocs(
+          collection(
+            db,
+            imagesCollection
+          )
+        );
 
       const nameOptions = [];
       const imageMap = {};
 
-      namesSnapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        nameOptions.push(data.name);
-        imageMap[data.name] = data.photoURL;
-      });
+      namesSnapshot.forEach(
+        docSnap => {
+          const data =
+            docSnap.data();
+
+          if (
+            data.name
+          ) {
+            nameOptions.push(
+              data.name
+            );
+
+            imageMap[
+              data.name
+            ] =
+              data.photoURL || "";
+          }
+        }
+      );
+
+      nameOptions.sort(
+        (
+          a,
+          b
+        ) =>
+          String(a)
+            .localeCompare(
+              String(b)
+            )
+      );
+
+      if (
+        !nameOptions.includes(
+          "No One"
+        )
+      ) {
+        nameOptions.unshift(
+          "No One"
+        );
+      }
 
       let sectionCount = 1;
-      for (const docId of docOrder) {
-        const docRef = doc(db, assignmentsCollection, docId);
-        const docSnap = await getDoc(docRef);
-        const data = docSnap.data();
-        if (!data) continue;
 
-        const section = document.createElement("div");
-        section.className = "mic-card";
+      for (
+        const docId
+        of docOrder
+      ) {
+        const assignmentRef =
+          doc(
+            db,
+            assignmentsCollection,
+            docId
+          );
 
-        const isAssigned = data.name && data.name !== "No One";
+        const assignmentSnap =
+          await getDoc(
+            assignmentRef
+          );
+
+        const data =
+          assignmentSnap.data()
+          ||
+          {
+            name:
+              "No One"
+          };
+
+        const section =
+          document.createElement(
+            "div"
+          );
+
+        section.className =
+          "mic-card";
+
+        const isAssigned =
+          data.name &&
+          data.name !== "No One";
 
         section.innerHTML = `
-          <div class="mic-card-header ${isAssigned ? "assigned" : "unassigned"}">
-            <h3>Mic ${sectionCount}</h3>
-            <span class="tag">${isAssigned ? "Assigned" : "Empty"}</span>
+          <div
+            class="mic-card-header ${
+              isAssigned
+                ? "assigned"
+                : "unassigned"
+            }"
+          >
+
+            <h3>
+              Mic ${sectionCount}
+            </h3>
+
+            <span class="tag">
+              ${
+                isAssigned
+                  ? "Assigned"
+                  : "Empty"
+              }
+            </span>
+
           </div>
 
           <div class="mic-box">
-            <label>👤 Name:</label>
-            <select id="name-${docId}">
-              ${nameOptions.map(name => `<option value="${name}" ${name === data.name ? "selected" : ""}>${name}</option>`).join("")}
+
+            <label>
+              Name
+            </label>
+
+            <select
+              id="name-${docId}"
+            >
+
+              ${
+                nameOptions
+                  .map(
+                    name => `
+                      <option
+                        value="${escapeHtml(name)}"
+                        ${
+                          name === data.name
+                            ? "selected"
+                            : ""
+                        }
+                      >
+                        ${escapeHtml(name)}
+                      </option>
+                    `
+                  )
+                  .join("")
+              }
+
             </select>
+
           </div>
 
           <div class="mic-box">
-            <label>🎤 Mic #:</label>
-            <input type="text" id="micNumber-${docId}" value="${data.micNumber || ""}">
+
+            <label>
+              Mic #
+            </label>
+
+            <input
+              type="text"
+              id="micNumber-${docId}"
+              value="${escapeHtml(
+                data.micNumber ||
+                ""
+              )}"
+            >
+
           </div>
 
           <div class="mic-box">
-            <label>🎧 In-Ear Pack:</label>
-            <input type="text" id="inEarPack-${docId}" value="${data.inEarPack || ""}">
+
+            <label>
+              In-Ear Pack
+            </label>
+
+            <input
+              type="text"
+              id="inEarPack-${docId}"
+              value="${escapeHtml(
+                data.inEarPack ||
+                ""
+              )}"
+            >
+
           </div>
 
           <div class="mic-box">
-            <label>📍 Position:</label>
-            <input type="text" id="position-${docId}" value="${data.position || ""}" placeholder="Optional (does NOT affect Vox 1–4 now)">
+
+            <label>
+              Position
+            </label>
+
+            <input
+              type="text"
+              id="position-${docId}"
+              value="${escapeHtml(
+                data.position ||
+                ""
+              )}"
+              placeholder="Optional"
+            >
+
           </div>
 
           <div class="mic-box">
-            <label>🖼️ Photo:</label>
-            <img id="photo-${docId}" src="${imageMap[data.name] || ""}" alt="Photo" class="mic-photo">
+
+            <label>
+              Photo
+            </label>
+
+            <img
+              id="photo-${docId}"
+              src="${escapeHtml(
+                imageMap[data.name] ||
+                ""
+              )}"
+              alt="Photo"
+              class="mic-photo"
+            >
+
           </div>
         `;
 
-        form.appendChild(section);
-        sectionCount++;
+        form.appendChild(
+          section
+        );
 
-        document.getElementById(`name-${docId}`).addEventListener("change", (e) => {
-          const newName = e.target.value;
-          document.getElementById(`photo-${docId}`).src = imageMap[newName] || "";
-        });
+        document
+          .getElementById(
+            `name-${docId}`
+          )
+          .addEventListener(
+            "change",
+            event => {
+              const newName =
+                event.target.value;
+
+              document
+                .getElementById(
+                  `photo-${docId}`
+                )
+                .src =
+                  imageMap[
+                    newName
+                  ] || "";
+            }
+          );
+
+        sectionCount++;
       }
     }
 
     async function saveAssignments() {
       try {
-        const sections = document.querySelectorAll(".mic-card");
+        const sections =
+          document.querySelectorAll(
+            ".mic-card"
+          );
 
-        // Save all cards to Firestore
-        for (const section of sections) {
-          const selectEl = section.querySelector("select");
-          if (!selectEl) continue;
+        for (
+          const section
+          of sections
+        ) {
+          const selectEl =
+            section.querySelector(
+              "select"
+            );
 
-          const id = selectEl.id.split("-")[1];
+          if (
+            !selectEl
+          ) {
+            continue;
+          }
 
-          const name = cleanName(document.getElementById(`name-${id}`)?.value);
-          const micNumber = (document.getElementById(`micNumber-${id}`)?.value || "").trim();
-          const inEarPack = (document.getElementById(`inEarPack-${id}`)?.value || "").trim();
-          const position = (document.getElementById(`position-${id}`)?.value || "").trim();
+          const id =
+            selectEl.id
+              .split("-")[1];
 
-          await setDoc(doc(db, assignmentsCollection, id), {
-            name: name || "No One",
-            micNumber,
-            inEarPack,
-            position
-          }, { merge: true });
+          const name =
+            cleanName(
+              document
+                .getElementById(
+                  `name-${id}`
+                )
+                ?.value
+            );
+
+          const micNumber =
+            (
+              document
+                .getElementById(
+                  `micNumber-${id}`
+                )
+                ?.value
+              ||
+              ""
+            )
+              .trim();
+
+          const inEarPack =
+            (
+              document
+                .getElementById(
+                  `inEarPack-${id}`
+                )
+                ?.value
+              ||
+              ""
+            )
+              .trim();
+
+          const position =
+            (
+              document
+                .getElementById(
+                  `position-${id}`
+                )
+                ?.value
+              ||
+              ""
+            )
+              .trim();
+
+          await setDoc(
+            doc(
+              db,
+              assignmentsCollection,
+              id
+            ),
+            {
+              name:
+                name ||
+                "No One",
+
+              micNumber,
+              inEarPack,
+              position
+            },
+            {
+              merge: true
+            }
+          );
         }
 
-const getVoxValue = (index) => {
-  const raw = document.getElementById(`name-${docOrder[index]}`)?.value;
+        await syncCompanionVoxNamesFromAssignments();
 
-  // If it's empty OR explicitly "No One" → fallback
-  if (!raw || raw === "No One") {
-    return `Vox ${index + 1}`;
-  }
+        document
+          .getElementById(
+            "lastSaved"
+          )
+          .textContent =
+            `Last Saved At: ${
+              new Date()
+                .toLocaleTimeString(
+                  [],
+                  {
+                    hour:
+                      "2-digit",
 
-  return cleanName(raw);
-};
+                    minute:
+                      "2-digit"
+                  }
+                )
+            }`;
 
-const vox = {
-  vox1: getVoxValue(0),
-  vox2: getVoxValue(1),
-  vox3: getVoxValue(2),
-  vox4: getVoxValue(3),
-  vox5: getVoxValue(4),
-  updatedAt: new Date().toISOString()
-};
+        flash(
+          "Assignments saved. Vox 1–5 updated."
+        );
+      }
+      catch (
+        err
+      ) {
+        console.error(
+          "saveAssignments failed:",
+          err
+        );
 
-        // ✅ Overwrite companion doc so it stays clean
-        await setDoc(doc(db, "companion", "voxNames"), vox);
-
-        const now = new Date();
-        const timeString = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        document.getElementById("lastSaved").textContent = `Last Saved At: ${timeString}`;
-
-        alert("✅ Saved! Vox 1–5 now mirror Mic 1–5 automatically.");
-      } catch (err) {
-        console.error("❌ saveAssignments failed:", err);
-        alert("❌ Save failed. Open console for details.");
+        alert(
+          "Save failed. Open console for details."
+        );
       }
     }
 
-    window.addEventListener("DOMContentLoaded", loadPage);
-    window.saveAssignments = saveAssignments;
-    window.saveSettings = saveSettings;
+    async function syncCompanionVoxNamesFromAssignments() {
+      const values = [];
+
+      for (
+        let index = 0;
+        index < 5;
+        index++
+      ) {
+        const snap =
+          await getDoc(
+            doc(
+              db,
+              assignmentsCollection,
+              docOrder[index]
+            )
+          );
+
+        const name =
+          cleanName(
+            snap.data()?.name
+          );
+
+        values.push(
+          !name ||
+          name === "No One"
+            ? `Vox ${index + 1}`
+            : name
+        );
+      }
+
+      await setDoc(
+        doc(
+          db,
+          "companion",
+          "voxNames"
+        ),
+        {
+          vox1:
+            values[0],
+
+          vox2:
+            values[1],
+
+          vox3:
+            values[2],
+
+          vox4:
+            values[3],
+
+          vox5:
+            values[4],
+
+          updatedAt:
+            new Date()
+              .toISOString()
+        },
+        {
+          merge: true
+        }
+      );
+    }
+
+    /* ========================================
+       PEOPLE MANAGER
+       USES EXISTING "images" COLLECTION
+    ======================================== */
+
+    let cropImage = null;
+    let cropPersonId = null;
+    let cropScale = 1;
+    let cropOffsetX = 0;
+    let cropOffsetY = 0;
+    let cropDragging = false;
+    let cropLastX = 0;
+    let cropLastY = 0;
+    let cropPendingName = "";
+    let cropIsNewPerson = false;
+
+    async function loadPeopleManager() {
+      const container =
+        document.getElementById(
+          "peopleManagerList"
+        );
+
+      container.innerHTML =
+        `
+          <div class="people-empty">
+            Loading people...
+          </div>
+        `;
+
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            imagesCollection
+          )
+        );
+
+      const people = [];
+
+      snapshot.forEach(
+        snap => {
+          people.push({
+            id:
+              snap.id,
+
+            ...snap.data()
+          });
+        }
+      );
+
+      people.sort(
+        (
+          a,
+          b
+        ) =>
+          String(
+            a.name || ""
+          )
+            .localeCompare(
+              String(
+                b.name || ""
+              )
+            )
+      );
+
+      container.innerHTML = "";
+
+      if (
+        !people.length
+      ) {
+        container.innerHTML =
+          `
+            <div class="people-empty">
+              No people have been added yet.
+            </div>
+          `;
+
+        return;
+      }
+
+      people.forEach(
+        person => {
+          const protectedPerson =
+            person.id === "no_one"
+            ||
+            cleanName(
+              person.name
+            )
+              .toLowerCase() ===
+              "no one";
+
+          const card =
+            document.createElement(
+              "div"
+            );
+
+          card.className =
+            "person-manager-card";
+
+          card.innerHTML = `
+            <div class="person-manager-photo-wrap">
+
+              ${
+                person.photoURL
+                  ? `
+                    <img
+                      class="person-manager-photo"
+                      src="${escapeHtml(
+                        person.photoURL
+                      )}"
+                      alt="${escapeHtml(
+                        person.name ||
+                        "Person"
+                      )}"
+                    >
+                  `
+                  : `
+                    <div class="person-photo-placeholder">
+                      No Photo
+                    </div>
+                  `
+              }
+
+            </div>
+
+            <div class="person-manager-fields">
+
+              <label>
+                Name
+              </label>
+
+              <input
+                id="person-name-${person.id}"
+                type="text"
+                value="${escapeHtml(
+                  person.name ||
+                  ""
+                )}"
+                ${
+                  protectedPerson
+                    ? "disabled"
+                    : ""
+                }
+              >
+
+              <input
+                id="person-file-${person.id}"
+                type="file"
+                accept="image/*"
+                hidden
+              >
+
+              <div class="person-manager-actions">
+
+                ${
+                  person.photoURL
+                    ? `
+                      <button
+                        class="person-edit-photo-btn"
+                        data-edit-photo-id="${person.id}"
+                      >
+                        Edit Existing Photo
+                      </button>
+                    `
+                    : ""
+                }
+
+                <button
+                  class="person-photo-btn"
+                  data-photo-id="${person.id}"
+                >
+                  ${
+                    person.photoURL
+                      ? "Upload New Photo"
+                      : "Add Photo"
+                  }
+                </button>
+
+                ${
+                  !protectedPerson
+                    ? `
+                      <button
+                        class="person-save-btn"
+                        data-save-id="${person.id}"
+                      >
+                        Save Name
+                      </button>
+
+                      <button
+                        class="person-delete-btn"
+                        data-delete-id="${person.id}"
+                      >
+                        Delete
+                      </button>
+                    `
+                    : `
+                      <div class="protected-note">
+                        "No One" is protected and cannot
+                        be renamed or deleted.
+                      </div>
+                    `
+                }
+
+              </div>
+
+            </div>
+          `;
+
+          container.appendChild(
+            card
+          );
+
+          const fileInput =
+            document.getElementById(
+              `person-file-${person.id}`
+            );
+
+          card
+            .querySelector(
+              "[data-photo-id]"
+            )
+            .addEventListener(
+              "click",
+              () => {
+                fileInput.click();
+              }
+            );
+
+          fileInput.addEventListener(
+            "change",
+            event => {
+              const file =
+                event.target.files?.[0];
+
+              if (
+                file
+              ) {
+                openCropperFromFile(
+                  file,
+                  person.id,
+                  "",
+                  false
+                );
+              }
+
+              event.target.value = "";
+            }
+          );
+
+          const editExistingButton =
+            card.querySelector(
+              "[data-edit-photo-id]"
+            );
+
+          if (
+            editExistingButton
+          ) {
+            editExistingButton
+              .addEventListener(
+                "click",
+                () =>
+                  editExistingPhoto(
+                    person.id,
+                    person.photoURL
+                  )
+              );
+          }
+
+          const saveButton =
+            card.querySelector(
+              "[data-save-id]"
+            );
+
+          if (
+            saveButton
+          ) {
+            saveButton
+              .addEventListener(
+                "click",
+                () =>
+                  renamePerson(
+                    person.id,
+                    person.name ||
+                    ""
+                  )
+              );
+          }
+
+          const deleteButton =
+            card.querySelector(
+              "[data-delete-id]"
+            );
+
+          if (
+            deleteButton
+          ) {
+            deleteButton
+              .addEventListener(
+                "click",
+                () =>
+                  deletePerson(
+                    person.id,
+                    person.name ||
+                    ""
+                  )
+              );
+          }
+        }
+      );
+    }
+
+    async function addPerson() {
+      const nameInput =
+        document.getElementById(
+          "newPersonName"
+        );
+
+      const fileInput =
+        document.getElementById(
+          "newPersonPhoto"
+        );
+
+      const name =
+        nameInput.value
+          .trim();
+
+      const file =
+        fileInput.files?.[0];
+
+      if (
+        !name
+      ) {
+        alert(
+          "Enter the person's name."
+        );
+
+        return;
+      }
+
+      if (
+        !file
+      ) {
+        alert(
+          "Choose a photo."
+        );
+
+        return;
+      }
+
+      const personId =
+        slugifyName(
+          name
+        );
+
+      if (
+        !personId
+      ) {
+        alert(
+          "That name cannot be used as a Firestore document ID."
+        );
+
+        return;
+      }
+
+      const existing =
+        await getDoc(
+          doc(
+            db,
+            imagesCollection,
+            personId
+          )
+        );
+
+      if (
+        existing.exists()
+      ) {
+        alert(
+          `A person with the document ID "${personId}" already exists.`
+        );
+
+        return;
+      }
+
+      openCropperFromFile(
+        file,
+        personId,
+        name,
+        true
+      );
+
+      nameInput.value = "";
+      fileInput.value = "";
+    }
+
+    async function renamePerson(
+      personId,
+      oldName
+    ) {
+      const input =
+        document.getElementById(
+          `person-name-${personId}`
+        );
+
+      const newName =
+        input.value
+          .trim();
+
+      if (
+        !newName
+      ) {
+        alert(
+          "Name cannot be empty."
+        );
+
+        return;
+      }
+
+      await setDoc(
+        doc(
+          db,
+          imagesCollection,
+          personId
+        ),
+        {
+          name:
+            newName
+        },
+        {
+          merge: true
+        }
+      );
+
+      if (
+        oldName &&
+        oldName !== newName
+      ) {
+        const assignments =
+          await getDocs(
+            collection(
+              db,
+              assignmentsCollection
+            )
+          );
+
+        const batch =
+          writeBatch(
+            db
+          );
+
+        assignments.forEach(
+          snap => {
+            if (
+              snap.data().name ===
+              oldName
+            ) {
+              batch.set(
+                snap.ref,
+                {
+                  name:
+                    newName
+                },
+                {
+                  merge: true
+                }
+              );
+            }
+          }
+        );
+
+        await batch.commit();
+
+        await syncCompanionVoxNamesFromAssignments();
+      }
+
+      flash(
+        "Person updated."
+      );
+
+      await Promise.all([
+        loadPeopleManager(),
+        loadMicAssignments()
+      ]);
+    }
+
+    async function deletePerson(
+      personId,
+      personName
+    ) {
+      if (
+        personId === "no_one"
+        ||
+        cleanName(
+          personName
+        )
+          .toLowerCase() ===
+          "no one"
+      ) {
+        alert(
+          '"No One" cannot be deleted.'
+        );
+
+        return;
+      }
+
+      const confirmed =
+        confirm(
+          `Delete ${
+            personName ||
+            "this person"
+          }?`
+        );
+
+      if (
+        !confirmed
+      ) {
+        return;
+      }
+
+      const assignments =
+        await getDocs(
+          collection(
+            db,
+            assignmentsCollection
+          )
+        );
+
+      const batch =
+        writeBatch(
+          db
+        );
+
+      assignments.forEach(
+        snap => {
+          if (
+            snap.data().name ===
+            personName
+          ) {
+            batch.set(
+              snap.ref,
+              {
+                name:
+                  "No One"
+              },
+              {
+                merge: true
+              }
+            );
+          }
+        }
+      );
+
+      batch.delete(
+        doc(
+          db,
+          imagesCollection,
+          personId
+        )
+      );
+
+      await batch.commit();
+
+      try {
+        await deleteObject(
+          ref(
+            storage,
+            `people/${personId}.jpg`
+          )
+        );
+      }
+      catch (
+        err
+      ) {
+        console.log(
+          "No Firebase Storage image to delete:",
+          err.message
+        );
+      }
+
+      await syncCompanionVoxNamesFromAssignments();
+
+      flash(
+        "Person deleted."
+      );
+
+      await Promise.all([
+        loadPeopleManager(),
+        loadMicAssignments()
+      ]);
+    }
+
+    /* ========================================
+       EXISTING PHOTO
+       DOWNLOAD LINK -> CROPPER
+    ======================================== */
+
+    async function editExistingPhoto(
+      personId,
+      photoURL
+    ) {
+      if (
+        !photoURL
+      ) {
+        alert(
+          "This person does not have a photo URL."
+        );
+
+        return;
+      }
+
+      flash(
+        "Downloading existing photo..."
+      );
+
+      try {
+        const response =
+          await fetch(
+            photoURL,
+            {
+              mode:
+                "cors",
+
+              cache:
+                "no-store"
+            }
+          );
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            `Photo download failed with HTTP ${response.status}`
+          );
+        }
+
+        const blob =
+          await response.blob();
+
+        if (
+          !blob.type.startsWith(
+            "image/"
+          )
+        ) {
+          throw new Error(
+            "The photo URL did not return an image."
+          );
+        }
+
+        const file =
+          new File(
+            [
+              blob
+            ],
+            `${personId}-existing-photo`,
+            {
+              type:
+                blob.type ||
+                "image/jpeg"
+            }
+          );
+
+        openCropperFromFile(
+          file,
+          personId,
+          "",
+          false
+        );
+      }
+      catch (
+        err
+      ) {
+        console.error(
+          "Could not download existing photo:",
+          err
+        );
+
+        alert(
+          "I couldn't download that existing photo into the editor. " +
+          "The photo host may be blocking browser downloads. " +
+          "Use Upload New Photo instead."
+        );
+      }
+    }
+
+    /* ========================================
+       PHOTO CROPPER
+    ======================================== */
+
+    function openCropperFromFile(
+      file,
+      personId,
+      pendingName = "",
+      isNewPerson = false
+    ) {
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+        alert(
+          "Please choose an image file."
+        );
+
+        return;
+      }
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        event => {
+          const image =
+            new Image();
+
+          image.onload =
+            () => {
+              cropImage =
+                image;
+
+              cropPersonId =
+                personId;
+
+              cropPendingName =
+                pendingName;
+
+              cropIsNewPerson =
+                isNewPerson;
+
+              const baseScale =
+                Math.max(
+                  400 /
+                  image.width,
+
+                  600 /
+                  image.height
+                );
+
+              cropScale =
+                baseScale;
+
+              cropOffsetX =
+                (
+                  400 -
+                  image.width *
+                  cropScale
+                )
+                /
+                2;
+
+              cropOffsetY =
+                (
+                  600 -
+                  image.height *
+                  cropScale
+                )
+                /
+                2;
+
+              document
+                .getElementById(
+                  "cropZoom"
+                )
+                .value =
+                  100;
+
+              document
+                .getElementById(
+                  "cropModal"
+                )
+                .classList.add(
+                  "show"
+                );
+
+              drawCropper();
+            };
+
+          image.src =
+            event.target.result;
+        };
+
+      reader.readAsDataURL(
+        file
+      );
+    }
+
+    function drawCropper() {
+      if (
+        !cropImage
+      ) {
+        return;
+      }
+
+      const canvas =
+        document.getElementById(
+          "cropCanvas"
+        );
+
+      const ctx =
+        canvas.getContext(
+          "2d"
+        );
+
+      ctx.clearRect(
+        0,
+        0,
+        400,
+        600
+      );
+
+      ctx.fillStyle =
+        "#111";
+
+      ctx.fillRect(
+        0,
+        0,
+        400,
+        600
+      );
+
+      ctx.drawImage(
+        cropImage,
+        cropOffsetX,
+        cropOffsetY,
+        cropImage.width *
+        cropScale,
+        cropImage.height *
+        cropScale
+      );
+    }
+
+    function keepCropCovered() {
+      if (
+        !cropImage
+      ) {
+        return;
+      }
+
+      const scaledWidth =
+        cropImage.width *
+        cropScale;
+
+      const scaledHeight =
+        cropImage.height *
+        cropScale;
+
+      if (
+        scaledWidth <= 400
+      ) {
+        cropOffsetX =
+          (
+            400 -
+            scaledWidth
+          )
+          /
+          2;
+      }
+      else {
+        cropOffsetX =
+          Math.min(
+            0,
+            Math.max(
+              400 -
+              scaledWidth,
+
+              cropOffsetX
+            )
+          );
+      }
+
+      if (
+        scaledHeight <= 600
+      ) {
+        cropOffsetY =
+          (
+            600 -
+            scaledHeight
+          )
+          /
+          2;
+      }
+      else {
+        cropOffsetY =
+          Math.min(
+            0,
+            Math.max(
+              600 -
+              scaledHeight,
+
+              cropOffsetY
+            )
+          );
+      }
+    }
+
+    function setupCropper() {
+      const canvas =
+        document.getElementById(
+          "cropCanvas"
+        );
+
+      const slider =
+        document.getElementById(
+          "cropZoom"
+        );
+
+      canvas.addEventListener(
+        "pointerdown",
+        event => {
+          cropDragging =
+            true;
+
+          cropLastX =
+            event.clientX;
+
+          cropLastY =
+            event.clientY;
+
+          canvas.setPointerCapture(
+            event.pointerId
+          );
+        }
+      );
+
+      canvas.addEventListener(
+        "pointermove",
+        event => {
+          if (
+            !cropDragging
+          ) {
+            return;
+          }
+
+          const rect =
+            canvas.getBoundingClientRect();
+
+          cropOffsetX +=
+            (
+              event.clientX -
+              cropLastX
+            )
+            *
+            (
+              400 /
+              rect.width
+            );
+
+          cropOffsetY +=
+            (
+              event.clientY -
+              cropLastY
+            )
+            *
+            (
+              600 /
+              rect.height
+            );
+
+          cropLastX =
+            event.clientX;
+
+          cropLastY =
+            event.clientY;
+
+          keepCropCovered();
+
+          drawCropper();
+        }
+      );
+
+      function stopDragging() {
+        cropDragging =
+          false;
+      }
+
+      canvas.addEventListener(
+        "pointerup",
+        stopDragging
+      );
+
+      canvas.addEventListener(
+        "pointercancel",
+        stopDragging
+      );
+
+      slider.addEventListener(
+        "input",
+        () => {
+          if (
+            !cropImage
+          ) {
+            return;
+          }
+
+          const oldScale =
+            cropScale;
+
+          const baseScale =
+            Math.max(
+              400 /
+              cropImage.width,
+
+              600 /
+              cropImage.height
+            );
+
+          cropScale =
+            baseScale
+            *
+            (
+              Number(
+                slider.value
+              )
+              /
+              100
+            );
+
+          const centerX =
+            200;
+
+          const centerY =
+            300;
+
+          cropOffsetX =
+            centerX
+            -
+            (
+              centerX -
+              cropOffsetX
+            )
+            *
+            (
+              cropScale /
+              oldScale
+            );
+
+          cropOffsetY =
+            centerY
+            -
+            (
+              centerY -
+              cropOffsetY
+            )
+            *
+            (
+              cropScale /
+              oldScale
+            );
+
+          keepCropCovered();
+
+          drawCropper();
+        }
+      );
+    }
+
+    function closeCropper() {
+      document
+        .getElementById(
+          "cropModal"
+        )
+        .classList.remove(
+          "show"
+        );
+
+      cropImage = null;
+      cropPersonId = null;
+      cropPendingName = "";
+      cropIsNewPerson = false;
+      cropScale = 1;
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      cropDragging = false;
+    }
+
+    async function saveCroppedPhoto() {
+      if (
+        !cropImage ||
+        !cropPersonId
+      ) {
+        return;
+      }
+
+      const saveButton =
+        document.getElementById(
+          "saveCropButton"
+        );
+
+      saveButton.disabled =
+        true;
+
+      saveButton.textContent =
+        "Saving...";
+
+      const wasNewPerson =
+        cropIsNewPerson;
+
+      try {
+        const canvas =
+          document.getElementById(
+            "cropCanvas"
+          );
+
+        const blob =
+          await new Promise(
+            resolve =>
+              canvas.toBlob(
+                resolve,
+                "image/jpeg",
+                0.9
+              )
+          );
+
+        if (
+          !blob
+        ) {
+          throw new Error(
+            "Could not create the cropped image."
+          );
+        }
+
+        const storageRef =
+          ref(
+            storage,
+            `people/${cropPersonId}.jpg`
+          );
+
+        await uploadBytes(
+          storageRef,
+          blob,
+          {
+            contentType:
+              "image/jpeg"
+          }
+        );
+
+        const photoURL =
+          await getDownloadURL(
+            storageRef
+          );
+
+        const payload = {
+          photoURL,
+
+          photoWidth:
+            400,
+
+          photoHeight:
+            600,
+
+          photoUpdatedAt:
+            new Date()
+              .toISOString()
+        };
+
+        if (
+          cropIsNewPerson &&
+          cropPendingName
+        ) {
+          payload.name =
+            cropPendingName;
+
+          payload.createdAt =
+            new Date()
+              .toISOString();
+        }
+
+        await setDoc(
+          doc(
+            db,
+            imagesCollection,
+            cropPersonId
+          ),
+          payload,
+          {
+            merge: true
+          }
+        );
+
+        closeCropper();
+
+        flash(
+          wasNewPerson
+            ? "Person added."
+            : "Photo saved."
+        );
+
+        await Promise.all([
+          loadPeopleManager(),
+          loadMicAssignments()
+        ]);
+      }
+      catch (
+        err
+      ) {
+        console.error(
+          "saveCroppedPhoto failed:",
+          err
+        );
+
+        alert(
+          `Could not save the photo: ${
+            err.message
+          }`
+        );
+      }
+      finally {
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          "Save Photo";
+      }
+    }
+
+    /* ========================================
+       PAGE STARTUP
+    ======================================== */
+
+    async function loadPage() {
+      const now =
+        new Date();
+
+      document
+        .getElementById(
+          "lastSaved"
+        )
+        .textContent =
+          `Loaded At: ${
+            now.toLocaleTimeString(
+              [],
+              {
+                hour:
+                  "2-digit",
+
+                minute:
+                  "2-digit"
+              }
+            )
+          }`;
+
+      buildWirelessFields();
+
+      setupCropper();
+
+      await Promise.all([
+        loadMicAssignments(),
+        loadSettings(),
+        loadPeopleManager()
+      ]);
+    }
+
+    window.addEventListener(
+      "DOMContentLoaded",
+      loadPage
+    );
+
+    window.saveAssignments =
+      saveAssignments;
+
+    window.savePlanning =
+      savePlanning;
+
+    window.saveWireless =
+      saveWireless;
+
+    window.addPerson =
+      addPerson;
+
+    window.closeCropper =
+      closeCropper;
+
+    window.saveCroppedPhoto =
+      saveCroppedPhoto;
   </script>
 
   <style>
-    body { background-color:#000; color:#fff; font-family:Arial,sans-serif; margin:0; padding:20px; }
-    .top-bar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:15px; }
-    h1 { font-size:1.8rem; margin:0 auto; text-align:center; width:100%; }
-    #lastSaved { font-size:0.9rem; color:#aaa; position:absolute; top:20px; right:20px; }
-    .settings-wrapper { max-width:1000px; margin:0 auto 30px; padding:0 10px; }
-    .divider-line { height:1px; background-color:#444; margin:20px 0; }
-    .settings h2 { text-align:center; color:#28a745; margin-bottom:10px; }
-    .settings-row { display:block; width:100%; }
-    .field-group { display:flex; flex-direction:column; width:100%; margin-bottom:10px; }
-    .field-group label { font-weight:bold; font-size:0.85rem; margin-bottom:4px; color:#ccc; }
-    .settings-row input { padding:6px 10px; border-radius:4px; border:none; font-size:0.9rem; }
-    .settings-row button { background:#28a745; border:none; padding:10px 20px; color:#fff; font-size:15px; border-radius:5px; cursor:pointer; white-space:nowrap; }
-    #micForm { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:20px; }
-    .mic-card { background:#1e1e1e; padding:10px; border-radius:8px; border:1px solid #444; display:flex; flex-direction:column; }
-    .mic-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .mic-card-header h3 { margin:0; font-size:1.1rem; color:#28a745; }
-    .tag { font-size:0.75rem; background-color:#444; padding:2px 6px; border-radius:4px; text-transform:uppercase; }
-    .assigned .tag { background-color:#28a745; color:#000; }
-    .unassigned .tag { background-color:#888; color:#fff; }
-    .mic-box { margin-bottom:10px; }
-    .mic-photo { width:100%; max-height:130px; object-fit:cover; object-position:top; border-radius:6px; }
-    button.save-assignments { margin:20px auto; display:block; background:#28a745; border:none; padding:10px 20px; color:#fff; font-size:15px; border-radius:5px; cursor:pointer; }
-    .open-btn { background-color:#28a745; color:#fff; padding:6px 12px; font-size:0.8rem; border-radius:5px; text-decoration:none; position:absolute; top:20px; left:15px; z-index:10; }
+    * {
+      box-sizing:
+        border-box;
+    }
+
+    body {
+      background:
+        #000;
+
+      color:
+        #fff;
+
+      font-family:
+        Arial,
+        sans-serif;
+
+      margin:
+        0;
+
+      padding:
+        20px;
+    }
+
+    .top-bar {
+      display:
+        flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      flex-wrap:
+        wrap;
+
+      margin-bottom:
+        20px;
+
+      position:
+        relative;
+    }
+
+    h1 {
+      font-size:
+        1.8rem;
+
+      margin:
+        0 auto;
+
+      text-align:
+        center;
+
+      width:
+        100%;
+    }
+
+    #lastSaved {
+      font-size:
+        0.9rem;
+
+      color:
+        #aaa;
+
+      position:
+        absolute;
+
+      top:
+        4px;
+
+      right:
+        0;
+    }
+
+    .open-btn {
+      background:
+        #28a745;
+
+      color:
+        #fff;
+
+      padding:
+        7px 12px;
+
+      font-size:
+        0.8rem;
+
+      border-radius:
+        5px;
+
+      text-decoration:
+        none;
+
+      position:
+        absolute;
+
+      top:
+        0;
+
+      left:
+        0;
+
+      z-index:
+        10;
+    }
+
+    .section-wrap {
+      max-width:
+        1300px;
+
+      margin:
+        0 auto;
+    }
+
+    .section-title {
+      margin:
+        0 0 12px;
+
+      color:
+        #8ed8ff;
+
+      font-size:
+        1.05rem;
+    }
+
+    .mic-assignments-section {
+      margin-bottom:
+        30px;
+    }
+
+    #micForm {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fit,
+          minmax(
+            190px,
+            1fr
+          )
+        );
+
+      gap:
+        20px;
+
+      max-width:
+        1300px;
+
+      margin:
+        0 auto;
+    }
+
+    .mic-card {
+      background:
+        #1e1e1e;
+
+      padding:
+        10px;
+
+      border-radius:
+        8px;
+
+      border:
+        1px solid #444;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+    }
+
+    .mic-card-header {
+      display:
+        flex;
+
+      justify-content:
+        space-between;
+
+      align-items:
+        center;
+
+      margin-bottom:
+        10px;
+    }
+
+    .mic-card-header h3 {
+      margin:
+        0;
+
+      font-size:
+        1.1rem;
+
+      color:
+        #28a745;
+    }
+
+    .tag {
+      font-size:
+        0.75rem;
+
+      background:
+        #444;
+
+      padding:
+        2px 6px;
+
+      border-radius:
+        4px;
+
+      text-transform:
+        uppercase;
+    }
+
+    .assigned .tag {
+      background:
+        #28a745;
+
+      color:
+        #000;
+    }
+
+    .unassigned .tag {
+      background:
+        #888;
+
+      color:
+        #fff;
+    }
+
+    .mic-box {
+      margin-bottom:
+        10px;
+    }
+
+    .mic-photo {
+      width:
+        100%;
+
+      max-height:
+        130px;
+
+      object-fit:
+        cover;
+
+      object-position:
+        top;
+
+      border-radius:
+        6px;
+
+      background:
+        #111;
+    }
+
+    button.save-assignments {
+      margin:
+        20px auto 0;
+
+      display:
+        block;
+
+      background:
+        #28a745;
+    }
+
+    .settings-wrapper {
+      max-width:
+        1150px;
+
+      margin:
+        0 auto 30px;
+    }
+
+    .panel {
+      background:
+        #141414;
+
+      border:
+        1px solid #333;
+
+      border-radius:
+        10px;
+
+      padding:
+        16px;
+
+      margin:
+        16px 0;
+    }
+
+    .panel h2 {
+      margin:
+        0 0 13px;
+
+      color:
+        #8ed8ff;
+
+      font-size:
+        1.05rem;
+    }
+
+    .hint {
+      color:
+        #aaa;
+
+      font-size:
+        0.79rem;
+
+      line-height:
+        1.4;
+
+      margin-top:
+        5px;
+    }
+
+    .settings-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(
+            220px,
+            1fr
+          )
+        );
+
+      gap:
+        10px;
+    }
+
+    .field-group {
+      display:
+        flex;
+
+      flex-direction:
+        column;
+    }
+
+    label {
+      display:
+        block;
+
+      font-weight:
+        bold;
+
+      font-size:
+        0.79rem;
+
+      margin-bottom:
+        4px;
+
+      color:
+        #ccc;
+    }
+
+    input,
+    select {
+      width:
+        100%;
+
+      background:
+        #272727;
+
+      color:
+        #fff;
+
+      border:
+        1px solid #444;
+
+      padding:
+        9px 10px;
+
+      border-radius:
+        5px;
+
+      font-size:
+        0.9rem;
+    }
+
+    button {
+      border:
+        none;
+
+      padding:
+        10px 18px;
+
+      color:
+        #fff;
+
+      font-size:
+        14px;
+
+      border-radius:
+        5px;
+
+      cursor:
+        pointer;
+
+      font-weight:
+        700;
+    }
+
+    button:disabled {
+      opacity:
+        0.55;
+
+      cursor:
+        default;
+    }
+
+    .save {
+      background:
+        #28a745;
+    }
+
+    .panel-actions {
+      margin-top:
+        12px;
+
+      display:
+        flex;
+
+      justify-content:
+        flex-end;
+    }
+
+    details {
+      background:
+        #111;
+
+      border:
+        1px solid #303030;
+
+      border-radius:
+        8px;
+
+      margin:
+        8px 0;
+
+      overflow:
+        hidden;
+    }
+
+    summary {
+      cursor:
+        pointer;
+
+      padding:
+        12px 14px;
+
+      font-weight:
+        800;
+    }
+
+    .details-body {
+      padding:
+        0 12px 12px;
+    }
+
+    .receiver-row {
+      display:
+        grid;
+
+      grid-template-columns:
+        1.2fr 1fr 0.8fr;
+
+      gap:
+        9px;
+
+      padding:
+        8px 0;
+
+      border-top:
+        1px solid #282828;
+    }
+
+    .receiver-row:first-child {
+      border-top:
+        none;
+    }
+
+    .people-manager-section {
+      max-width:
+        1300px;
+
+      margin:
+        40px auto 20px;
+
+      padding-top:
+        25px;
+
+      border-top:
+        1px solid #333;
+    }
+
+    .people-manager-section > h2 {
+      color:
+        #8ed8ff;
+
+      margin-bottom:
+        15px;
+    }
+
+    .people-add-panel {
+      background:
+        #141414;
+
+      border:
+        1px solid #333;
+
+      border-radius:
+        10px;
+
+      padding:
+        16px;
+
+      margin-bottom:
+        20px;
+    }
+
+    .people-add-panel h3 {
+      margin-top:
+        0;
+    }
+
+    .people-add-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr 1fr auto;
+
+      gap:
+        12px;
+
+      align-items:
+        end;
+    }
+
+    .people-add-button-wrap {
+      display:
+        flex;
+
+      align-items:
+        end;
+    }
+
+    .people-manager-list {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          auto-fill,
+          minmax(
+            240px,
+            1fr
+          )
+        );
+
+      gap:
+        15px;
+    }
+
+    .person-manager-card {
+      background:
+        #1b1b1b;
+
+      border:
+        1px solid #3a3a3a;
+
+      border-radius:
+        10px;
+
+      overflow:
+        hidden;
+    }
+
+    .person-manager-photo-wrap {
+      width:
+        100%;
+
+      aspect-ratio:
+        2 / 3;
+
+      background:
+        #0d0d0d;
+    }
+
+    .person-manager-photo {
+      width:
+        100%;
+
+      height:
+        100%;
+
+      display:
+        block;
+
+      object-fit:
+        cover;
+    }
+
+    .person-photo-placeholder {
+      width:
+        100%;
+
+      height:
+        100%;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      color:
+        #777;
+
+      font-weight:
+        700;
+    }
+
+    .person-manager-fields {
+      padding:
+        12px;
+    }
+
+    .person-manager-actions {
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        7px;
+
+      margin-top:
+        10px;
+    }
+
+    .person-edit-photo-btn {
+      background:
+        #6d28d9;
+
+      grid-column:
+        1 / -1;
+    }
+
+    .person-photo-btn {
+      background:
+        #2563eb;
+    }
+
+    .person-save-btn {
+      background:
+        #28a745;
+    }
+
+    .person-delete-btn {
+      background:
+        #b91c1c;
+
+      grid-column:
+        1 / -1;
+    }
+
+    .protected-note {
+      grid-column:
+        1 / -1;
+
+      color:
+        #999;
+
+      font-size:
+        0.78rem;
+
+      line-height:
+        1.4;
+
+      padding-top:
+        4px;
+    }
+
+    .people-empty {
+      color:
+        #aaa;
+
+      padding:
+        20px;
+
+      text-align:
+        center;
+    }
+
+    .crop-modal {
+      position:
+        fixed;
+
+      inset:
+        0;
+
+      background:
+        rgba(
+          0,
+          0,
+          0,
+          0.88
+        );
+
+      z-index:
+        10000;
+
+      display:
+        none;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        20px;
+    }
+
+    .crop-modal.show {
+      display:
+        flex;
+    }
+
+    .crop-dialog {
+      background:
+        #171717;
+
+      border:
+        1px solid #444;
+
+      border-radius:
+        12px;
+
+      width:
+        min(
+          500px,
+          100%
+        );
+
+      max-height:
+        95vh;
+
+      overflow:
+        auto;
+
+      padding:
+        18px;
+    }
+
+    .crop-dialog h2 {
+      margin-top:
+        0;
+
+      color:
+        #8ed8ff;
+    }
+
+    .crop-help {
+      color:
+        #aaa;
+
+      font-size:
+        0.85rem;
+
+      margin-bottom:
+        12px;
+    }
+
+    .crop-canvas-wrap {
+      width:
+        min(
+          100%,
+          320px
+        );
+
+      margin:
+        0 auto 15px;
+
+      aspect-ratio:
+        2 / 3;
+
+      border:
+        2px solid #fff;
+
+      overflow:
+        hidden;
+
+      background:
+        #000;
+    }
+
+    #cropCanvas {
+      width:
+        100%;
+
+      height:
+        100%;
+
+      display:
+        block;
+
+      touch-action:
+        none;
+
+      cursor:
+        move;
+    }
+
+    #cropZoom {
+      width:
+        100%;
+    }
+
+    .crop-actions {
+      display:
+        flex;
+
+      justify-content:
+        flex-end;
+
+      gap:
+        8px;
+
+      margin-top:
+        15px;
+    }
+
+    .crop-cancel {
+      background:
+        #555;
+    }
+
+    #flash {
+      position:
+        fixed;
+
+      bottom:
+        20px;
+
+      left:
+        50%;
+
+      transform:
+        translate(
+          -50%,
+          20px
+        );
+
+      background:
+        #28a745;
+
+      color:
+        #fff;
+
+      padding:
+        10px 16px;
+
+      border-radius:
+        999px;
+
+      opacity:
+        0;
+
+      pointer-events:
+        none;
+
+      transition:
+        0.2s;
+
+      z-index:
+        5000;
+    }
+
+    #flash.show {
+      opacity:
+        1;
+
+      transform:
+        translate(
+          -50%,
+          0
+        );
+    }
+
+    @media (
+      max-width:
+        750px
+    ) {
+      body {
+        padding:
+          12px;
+      }
+
+      #lastSaved,
+      .open-btn {
+        position:
+          static;
+
+        margin:
+          8px 5px;
+      }
+
+      .settings-grid,
+      .receiver-row,
+      .people-add-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .people-manager-list {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(
+              0,
+              1fr
+            )
+          );
+      }
+    }
+
+    @media (
+      max-width:
+        500px
+    ) {
+      .people-manager-list {
+        grid-template-columns:
+          1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
+
   <div class="top-bar">
-    <a href="https://blazeproduction.org/mics" target="_blank" class="open-btn left-btn">Open Display Screen</a>
-    <h1>Update Mic Assignments</h1>
-    <span id="lastSaved">Last Saved At: --:--</span>
+
+    <a
+      href="https://blazeproduction.org/mics"
+      target="_blank"
+      class="open-btn"
+    >
+      Open Display Screen
+    </a>
+
+    <h1>
+      Update Mic Assignments
+    </h1>
+
+    <span id="lastSaved">
+      Loaded At: --:--
+    </span>
+
   </div>
+
+  <!-- MIC ASSIGNMENTS -->
+
+  <section
+    class="section-wrap mic-assignments-section"
+  >
+
+    <h2 class="section-title">
+      Mic Assignments
+    </h2>
+
+    <div
+      id="micForm"
+    ></div>
+
+    <button
+      class="save-assignments"
+      onclick="saveAssignments()"
+    >
+      Save Assignments
+    </button>
+
+  </section>
+
+  <!-- SETTINGS -->
 
   <div class="settings-wrapper">
-    <div class="divider-line"></div>
 
-    <div class="settings">
-      <h2>Page Text</h2>
-      <div class="settings-row">
+    <!-- PLANNING CENTER -->
+
+    <div class="panel">
+
+      <h2>
+        Planning Center
+      </h2>
+
+      <div class="settings-grid">
+
         <div class="field-group">
-          <label for="titleInput">Title</label>
-          <input type="text" id="titleInput" placeholder="📝 Title..." />
+
+          <label for="serviceTypeSelect">
+            Plan Folder / Service Type
+          </label>
+
+          <select
+            id="serviceTypeSelect"
+          ></select>
+
+          <div
+            class="hint"
+            id="serviceTypesStatus"
+          ></div>
+
         </div>
+
         <div class="field-group">
-          <label for="taglineInput">Tagline</label>
-          <input type="text" id="taglineInput" placeholder="💬 Tagline..." />
+
+          <label for="lookaheadDays">
+            Upcoming Plan Lookahead
+          </label>
+
+          <input
+            id="lookaheadDays"
+            type="number"
+            min="1"
+            max="90"
+            value="14"
+          >
+
         </div>
-        <div class="field-group">
-          <label for="engineerInput">Scheduled Audio Engineer</label>
-          <input type="text" id="engineerInput" placeholder="🎛️ Name..." />
+
+        <div
+          class="field-group"
+          style="grid-column:1/-1"
+        >
+
+          <label for="leaderKeywords">
+            Leader Position Keywords
+          </label>
+
+          <input
+            id="leaderKeywords"
+            type="text"
+            value="Worship Leader, Service Leader, Speaker, Pastor"
+          >
+
+          <div class="hint">
+            Comma-separated.
+            Any scheduled position containing
+            one of these words will appear
+            on the Mic Board.
+          </div>
+
         </div>
-        <div class="field-group">
-          <label>&nbsp;</label>
-          <button onclick="saveSettings()">Save</button>
-        </div>
+
       </div>
+
+      <div class="panel-actions">
+
+        <button
+          class="save"
+          onclick="savePlanning()"
+        >
+          Save Planning Center
+        </button>
+
+      </div>
+
     </div>
 
-    <div class="divider-line"></div>
+    <!-- WIRELESS RECEIVERS -->
+
+    <div class="panel">
+
+      <h2>
+        Wireless Receiver Settings
+      </h2>
+
+      <div class="hint">
+        Receiver IP addresses are saved in Firebase,
+        so you can change them later without editing code.
+      </div>
+
+      <details>
+
+        <summary>
+          Mic 1–9 Receivers
+        </summary>
+
+        <div
+          class="details-body"
+          id="assignableReceivers"
+        ></div>
+
+      </details>
+
+      <details>
+
+        <summary>
+          4 Utility Receivers
+        </summary>
+
+        <div
+          class="details-body"
+          id="utilityReceivers"
+        ></div>
+
+      </details>
+
+      <div class="panel-actions">
+
+        <button
+          class="save"
+          onclick="saveWireless()"
+        >
+          Save Receiver Settings
+        </button>
+
+      </div>
+
+    </div>
+
   </div>
 
-  <div id="micForm"></div>
+  <!-- PEOPLE MANAGER -->
 
-  <button class="save-assignments" onclick="saveAssignments()">Save Assignments</button>
+  <section class="people-manager-section">
+
+    <h2>
+      People
+    </h2>
+
+    <div class="people-add-panel">
+
+      <h3>
+        Add Person
+      </h3>
+
+      <div class="people-add-grid">
+
+        <div>
+
+          <label>
+            Name
+          </label>
+
+          <input
+            id="newPersonName"
+            type="text"
+            placeholder="Person's name"
+          >
+
+        </div>
+
+        <div>
+
+          <label>
+            Photo
+          </label>
+
+          <input
+            id="newPersonPhoto"
+            type="file"
+            accept="image/*"
+          >
+
+        </div>
+
+        <div class="people-add-button-wrap">
+
+          <button
+            class="save"
+            onclick="addPerson()"
+          >
+            Add Person
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div
+      id="peopleManagerList"
+      class="people-manager-list"
+    ></div>
+
+  </section>
+
+  <!-- CROP MODAL -->
+
+  <div
+    id="cropModal"
+    class="crop-modal"
+  >
+
+    <div class="crop-dialog">
+
+      <h2>
+        Crop Photo
+      </h2>
+
+      <div class="crop-help">
+        Drag the photo to reposition it.
+        Use the slider to zoom.
+        The saved photo will be exactly
+        400 × 600 pixels.
+      </div>
+
+      <div class="crop-canvas-wrap">
+
+        <canvas
+          id="cropCanvas"
+          width="400"
+          height="600"
+        ></canvas>
+
+      </div>
+
+      <label for="cropZoom">
+        Zoom
+      </label>
+
+      <input
+        id="cropZoom"
+        type="range"
+        min="100"
+        max="300"
+        value="100"
+      >
+
+      <div class="crop-actions">
+
+        <button
+          class="crop-cancel"
+          onclick="closeCropper()"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="saveCropButton"
+          class="save"
+          onclick="saveCroppedPhoto()"
+        >
+          Save Photo
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div
+    id="flash"
+  ></div>
+
 </body>
 </html>
